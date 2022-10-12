@@ -183,7 +183,7 @@ job_json = {
                     "init_scripts": [
                         {
                             "dbfs": {
-                                "destination": "dbfs://tmp/openslide/openslide-tools.sh"
+                                "destination": "dbfs:/tmp/openslide/openslide-tools.sh"
                             }
                         }
                     ]
@@ -198,7 +198,7 @@ job_json = {
                     "init_scripts": [
                         {
                             "dbfs": {
-                                "destination": "dbfs://tmp/openslide/openslide-tools.sh"
+                                "destination": "dbfs:/tmp/openslide/openslide-tools.sh"
                             }
                         }
                     ]
