@@ -20,6 +20,7 @@ import json
 import os
 from pprint import pprint
 
+os.chdir("/databricks/driver")
 project_name='digital-pathology'
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
