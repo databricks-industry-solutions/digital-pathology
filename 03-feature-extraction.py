@@ -1,5 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
+# MAGIC You may find this series of notebooks at https://github.com/databricks-industry-solutions/digital-pathology. For more information about this solution accelerator, visit https://www.databricks.com/solutions/accelerators/digital-pathology.
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC # Distributed feature extraction
 # MAGIC In this notebook we use spark's `pandas_udfs` to effiently distribute feature extraction process. The extaracted features are then can be used to visually inspect the structure of extracted patches.
 # MAGIC 

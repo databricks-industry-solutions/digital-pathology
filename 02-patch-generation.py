@@ -1,5 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
+# MAGIC You may find this series of notebooks at https://github.com/databricks-industry-solutions/digital-pathology. For more information about this solution accelerator, visit https://www.databricks.com/solutions/accelerators/digital-pathology.
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC # Distributed patch generation
 # MAGIC In this notebook we use spark's `pandas_udfs` to effiently distribute patch generation process. Now that we have annotations and meta-data stored in delta, we can distrubute patch generation using `pandas_udf`s in spark. 
 

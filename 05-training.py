@@ -1,5 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
+# MAGIC You may find this series of notebooks at https://github.com/databricks-industry-solutions/digital-pathology. For more information about this solution accelerator, visit https://www.databricks.com/solutions/accelerators/digital-pathology.
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC # Train a binary classifier with transfer learning
 # MAGIC In this notebook, we use the labeled pacthes as a training set to train a classifier that predicts if a patch corresponds to a metastatic site or not. 
 # MAGIC To do so, we use transfer learning with `resnet18` model using pytorch, and log the resulting model with mlflow. In the next notebook we use this model to overlay a metastatic heatmap on a new slide.

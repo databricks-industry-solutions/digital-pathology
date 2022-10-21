@@ -1,5 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
+# MAGIC You may find this series of notebooks at https://github.com/databricks-industry-solutions/digital-pathology. For more information about this solution accelerator, visit https://www.databricks.com/solutions/accelerators/digital-pathology.
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC # Create a metastasis probability heatmap
 # MAGIC In the previous step, we re-trained a resent model for our classification task and loged the model using ML flow. In this notebook, we load the classification model tarined in the previous step and use it to overlay a heatmap of metastasis probability over a new slide.
 # MAGIC <br>
