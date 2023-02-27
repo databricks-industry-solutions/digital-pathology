@@ -6,7 +6,7 @@
 
 # MAGIC %md
 # MAGIC # Distributed patch generation
-# MAGIC In this notebook we use spark's `pandas_udfs` to effiently distribute patch generation process. Now that we have annotations and meta-data stored in delta, we can distrubute patch generation using `pandas_udf`s in spark. 
+# MAGIC In this notebook we use spark's `pandas_udfs` to efficiently distribute patch generation process. Now that we have annotations and meta-data stored in delta, we can distribute patch generation using `pandas_udf`s in spark. 
 
 # COMMAND ----------
 
@@ -49,7 +49,7 @@ MAX_N_PATCHES=settings['max_n_patches'] # We set this value to limit the number 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC We have defined many functions used in the notebook and subsequenct notebooks in `./definitions` notebook. By running this notebook these definitions are executed and available to be used here.
+# MAGIC We have defined many functions used in the notebook and subsequent notebooks in `./definitions` notebook. By running this notebook these definitions are executed and available to be used here.
 
 # COMMAND ----------
 
@@ -99,7 +99,7 @@ df_patch_info.groupBy('train_test').avg('label').display()
 # MAGIC %md
 # MAGIC ## 2. Create patches from WSI images
 # MAGIC 
-# MAGIC In this step, we simply distribute the tiling process based on specified cordinates. This is acheived by applying `dist_patch_extract` defined in `PatchGenerator` class from the helper notebook, which leverages `panadas_udfs` to distribute patch extaction from openSlide
+# MAGIC In this step, we simply distribute the tiling process based on specified coordinates. This is achieved by applying `dist_patch_extract` defined in `PatchGenerator` class from the helper notebook, which leverages `pandas_udfs` to distribute patch extraction from openSlide
 
 # COMMAND ----------
 
@@ -126,7 +126,7 @@ df_patch_info.repartition(64).withColumn('img_path',concat_ws('/',lit(IMG_PATH),
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Note that in the above command we simply created the spark execution plan and no action has been envioked yet. The following command will invoke and action which is to create a dataframe of extracted pacthes.  
+# MAGIC Note that in the above command we simply created the spark execution plan and no action has been invoked yet. The following command will invoke and action which is to create a dataframe of extracted patches.  
 
 # COMMAND ----------
 

@@ -6,7 +6,7 @@
 
 # MAGIC %md
 # MAGIC # Distributed feature extraction
-# MAGIC In this notebook we use spark's `pandas_udfs` to effiently distribute feature extraction process. The extaracted features are then can be used to visually inspect the structure of extracted patches.
+# MAGIC In this notebook we use spark's `pandas_udfs` to efficiently distribute feature extraction process. The extracted features are then can be used to visually inspect the structure of extracted patches.
 # MAGIC 
 # MAGIC 
 # MAGIC <img src="https://cloud.google.com/tpu/docs/images/inceptionv3onc--oview.png">
@@ -61,8 +61,8 @@ LEVEL=settings['level']
 
 # COMMAND ----------
 
-annotaion_df=spark.read.load(f'{ANNOTATION_PATH}/delta/patch_labels').withColumn('imid',concat_ws('-',col('sid'),col('x_center'),col('y_center')))
-display(annotaion_df)
+annotation_df=spark.read.load(f'{ANNOTATION_PATH}/delta/patch_labels').withColumn('imid',concat_ws('-',col('sid'),col('x_center'),col('y_center')))
+display(annotation_df)
 
 # COMMAND ----------
 
@@ -86,7 +86,7 @@ patch_df.display()
 
 # DBTITLE 1,Create a dataframe of processed patches with metadata
 dataset_df = (
-  annotaion_df
+  annotation_df
   .join(patch_df,on='imid')
   .selectExpr('uuid() as id','sid as slide_id','x_center','y_center','label','content')
 )
@@ -98,7 +98,7 @@ dataset_df.display()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 2. Extract features from imgaes
+# MAGIC ## 2. Extract features from images
 # MAGIC Now that we have a dataframe of all patches, we pass each patch through the pre-trained model and use the networks output (embeddings) as features to be used for dimensionality reduction.
 
 # COMMAND ----------
@@ -130,8 +130,8 @@ features_df.limit(1).display()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ##3. Cereate an image library in Delta
-# MAGIC Now to persist our results, we write the resulting dataframe into deltalake for furture access.
+# MAGIC ##3. Create an image library in Delta
+# MAGIC Now to persist our results, we write the resulting dataframe into deltalake for future access.
 
 # COMMAND ----------
 

@@ -7,7 +7,7 @@
 # MAGIC %md
 # MAGIC # Ingest annotation data to lakehouse
 # MAGIC In this section we load pre-processed annotation files - tabular data containing slide name, `x`,`y` coordinates of the tile and corresponding label (`0` for no metastasis and `1` for metastasis).
-# MAGIC We use pre-processed annotations from [BaiduResearch](https://github.com/baidu-research/NCRF). This repository, contains the coordinates of pre-sampled patches used in [the paper](https://openreview.net/forum?id=S1aY66iiM) which uses conditional random fields in conjunction with CNNs to achieve the highest accurarcy for detecting metastasis on WSI images:
+# MAGIC We use pre-processed annotations from [BaiduResearch](https://github.com/baidu-research/NCRF). This repository, contains the coordinates of pre-sampled patches used in [the paper](https://openreview.net/forum?id=S1aY66iiM) which uses conditional random fields in conjunction with CNNs to achieve the highest accuracy for detecting metastasis on WSI images:
 # MAGIC 
 # MAGIC >Each one is a csv file, where each line within the file is in the format like Tumor_024,25417,127565 that the last two numbers are (x, y) coordinates of the center of each patch at level 0. tumor_train.txt and normal_train.txt contains 200,000 coordinates respectively, and tumor_valid.txt and normal_valid.txt contains 20,000 coordinates respectively. Note that, coordinates of hard negative patches, typically around tissue boundary regions, are also included within normal_train.txt and normal_valid.txt. With the original WSI and pre-sampled coordinates, we can now generate image patches for training deep CNN models.
 # MAGIC 
@@ -83,7 +83,7 @@ print(dbutils.fs.head(f'{ANNOTATION_PATH}/tumor_train.txt'))
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 2. Create annotaion dataframes
+# MAGIC ## 2. Create annotation dataframes
 # MAGIC Now we create a dataframe of tumor/normal coordinates based on the annotation data and write the result in delta tables to be used in the next stage for creating patches.
 
 # COMMAND ----------

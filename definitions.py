@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC This notebook contains definitions for functions that will be used multiple times in this solution accelerator.
 # MAGIC The `PatchGenerator` class, contains methods to extract patches based on a given coordinate within the slide.
-# MAGIC To extract patches and manipulate WSI images, we use the [OpenSlide library](https://openslide.org/), which is assumed to be installed during the clsuter configuration using [init script](https://docs.databricks.com/user-guide/clusters/init-scripts.html)
+# MAGIC To extract patches and manipulate WSI images, we use the [OpenSlide library](https://openslide.org/), which is assumed to be installed during the cluster configuration using [init script](https://docs.databricks.com/user-guide/clusters/init-scripts.html)
 
 # COMMAND ----------
 
@@ -90,14 +90,14 @@ class PatchGenerator:
 # COMMAND ----------
 
 model = InceptionV3(include_top=False)
-broadcaseted_model_weights = sc.broadcast(model.get_weights())
+broadcasted_model_weights = sc.broadcast(model.get_weights())
 
 def model_fn(include_top=False):
   """
   Returns a InceptionV3 model with top layer removed and broadcasted pretrained weights.
   """
   model = InceptionV3(weights=None, include_top=include_top)
-  model.set_weights(broadcaseted_model_weights.value)
+  model.set_weights(broadcasted_model_weights.value)
   return model
 
 
