@@ -6,13 +6,13 @@
 
 # MAGIC %md
 # MAGIC # Create a metastasis probability heatmap
-# MAGIC In the previous step, we re-trained a resent model for our classification task and loged the model using ML flow. In this notebook, we load the classification model tarined in the previous step and use it to overlay a heatmap of metastasis probability over a new slide.
+# MAGIC In the previous step, we re-trained a resent model for our classification task and logged the model using ML flow. In this notebook, we load the classification model trained in the previous step and use it to overlay a heatmap of metastasis probability over a new slide.
 # MAGIC <br>
 # MAGIC <img src="https://hls-eng-data-public.s3.amazonaws.com/img/slide_heatmap.png" alt="logo" width=60% /> 
 # MAGIC </br>
 # MAGIC To do so, we use the our distributed segmentation approach to create patches from a given slide to be scored, and then use the pre-trained model to infer the probability of metastasis on each segment. We then visualize the results as a heatmap. 
 # MAGIC 
-# MAGIC Note that, you need to have `openSlide` installed on the cluster to be able to generate pacthes (use the same cluster you used for patch generation).
+# MAGIC Note that, you need to have `openSlide` installed on the cluster to be able to generate patches (use the same cluster you used for patch generation).
 
 # COMMAND ----------
 
@@ -77,13 +77,13 @@ device = torch.device("cuda" if use_cuda else "cpu")
 
 # MAGIC %md
 # MAGIC ## 1. Image segmentation
-# MAGIC To visualize the heatmap of probability of metastasis on a segment of the slide, first we need to create a grid of patches and then for each patch we run prediction based on the model that we trained in the previous step. To do so we leverage patching and pre-processing functions that we used in the pre-procesing step for training the mode. 
+# MAGIC To visualize the heatmap of probability of metastasis on a segment of the slide, first we need to create a grid of patches and then for each patch we run prediction based on the model that we trained in the previous step. To do so we leverage patching and pre-processing functions that we used in the pre-processing step for training the mode. 
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### 1.1 Grid generation
-# MAGIC The following function, takes the `x`,`y` coordinates of the boundries of the segment of a given slide for scroing and outputs a dataframe containing coordinates of each segment (segments of size `299X299`) and `i,j` indices corresponding to the index of each segment within the grid.
+# MAGIC The following function, takes the `x`,`y` coordinates of the boundaries of the segment of a given slide for scoring and outputs a dataframe containing coordinates of each segment (segments of size `299X299`) and `i,j` indices corresponding to the index of each segment within the grid.
 
 # COMMAND ----------
 
@@ -166,7 +166,7 @@ dataset_df.count()
 
 # MAGIC %md
 # MAGIC ## 2. Inference
-# MAGIC Now that we have the dataframe of segments, we simply load our classifer using the `uri` returned in the previous notebook and load the model. Next we use this model for prediction on the input spark dataframe in parallel.
+# MAGIC Now that we have the dataframe of segments, we simply load our classifier using the `uri` returned in the previous notebook and load the model. Next we use this model for prediction on the input spark dataframe in parallel.
 
 # COMMAND ----------
 
@@ -255,7 +255,7 @@ predictions_pdf
 
 # MAGIC %md
 # MAGIC ## 3. Create metastasis heatmap
-# MAGIC Now that we have the probability scores for each segment along with the indices of each segment on the grid, we can create a simple heatmap of probabiliy scores.
+# MAGIC Now that we have the probability scores for each segment along with the indices of each segment on the grid, we can create a simple heatmap of probability scores.
 
 # COMMAND ----------
 

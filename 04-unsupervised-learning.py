@@ -9,7 +9,7 @@
 # MAGIC In this notebook, we explore the structure of extracted features using [Uniform Manifold Approximation and Projection (UMAP)](https://umap-learn.readthedocs.io/en/latest/) method.
 # MAGIC To learn more visit: https://github.com/lmcinnes/umap
 # MAGIC 
-# MAGIC In this notebook we use UMAP embeddings to visually inspect the extarcted features from our generated patches which are stored in deltalake and examine the correlation between clusters of patches and labels. This method, in conjunction with clustering methods such as k-means can be used to determine the label of unlabeled patches based on the cluster they blong to (assuming a subset of patches have associated annotations), and help discover new patterns in the data.
+# MAGIC In this notebook we use UMAP embeddings to visually inspect the extracted features from our generated patches which are stored in deltalake and examine the correlation between clusters of patches and labels. This method, in conjunction with clustering methods such as k-means can be used to determine the label of unlabeled patches based on the cluster they belong to (assuming a subset of patches have associated annotations), and help discover new patterns in the data.
 
 # COMMAND ----------
 
@@ -89,7 +89,7 @@ img_features_pdf=img_features_df.toPandas()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Now we reshape the feature matirx into an `m*n` matrix for UMAP (m=number of samples and n=number of features)
+# MAGIC Now we reshape the feature matrix into an `m*n` matrix for UMAP (m=number of samples and n=number of features)
 
 # COMMAND ----------
 
@@ -157,7 +157,7 @@ fig.show()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC It appears from the above plot, that normal patches cluster into two classes (one at the right and the other on the left). Visual inspection and looking at the slie_id of each point, we notice that the cluster on the left is mainly formed by patches extracted from tumor slides (and the patch is a nornal patch - no metastasis indicated). 
+# MAGIC It appears from the above plot, that normal patches cluster into two classes (one at the right and the other on the left). Visual inspection and looking at the slide_id of each point, we notice that the cluster on the left is mainly formed by patches extracted from tumor slides (and the patch is a normal patch - no metastasis indicated). 
 
 # COMMAND ----------
 

@@ -6,7 +6,7 @@
 
 # MAGIC %md
 # MAGIC # Train a binary classifier with transfer learning
-# MAGIC In this notebook, we use the labeled pacthes as a training set to train a classifier that predicts if a patch corresponds to a metastatic site or not. 
+# MAGIC In this notebook, we use the labeled patches as a training set to train a classifier that predicts if a patch corresponds to a metastatic site or not. 
 # MAGIC To do so, we use transfer learning with `resnet18` model using pytorch, and log the resulting model with mlflow. In the next notebook we use this model to overlay a metastatic heatmap on a new slide.
 
 # COMMAND ----------
@@ -72,7 +72,7 @@ experiment_info=mlflow.set_experiment(settings['experiment_name'])
 # MAGIC %md
 # MAGIC ## 1. Load Data
 # MAGIC We will use torchvision and `torch.utils.data` packages for loading the data.
-# MAGIC Our aim is to train a model to classify extrated patches into normal `(0)` and tumor `(1)` based on provided annotations. Usually, this is a very small dataset to generalize upon, if trained from scratch. Since we are using transfer learning, we should be able to generalize reasonably well.
+# MAGIC Our aim is to train a model to classify extracted patches into normal `(0)` and tumor `(1)` based on provided annotations. Usually, this is a very small dataset to generalize upon, if trained from scratch. Since we are using transfer learning, we should be able to generalize reasonably well.
 # MAGIC 
 # MAGIC This dataset is a very small subset of imagenet.
 
@@ -228,7 +228,7 @@ exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
 # MAGIC %md
 # MAGIC ### Train and evaluate
-# MAGIC Depending on the number of images, this step can take several minitues. For example for 500 patches on a `cpu` machine it takes `5` min to train. If you use a single-node cluster with 1 `gpu` this step (with 4 epochs) will take `30s`.
+# MAGIC Depending on the number of images, this step can take several minutes. For example for 500 patches on a `cpu` machine it takes `5` min to train. If you use a single-node cluster with 1 `gpu` this step (with 4 epochs) will take `30s`.
 
 # COMMAND ----------
 
