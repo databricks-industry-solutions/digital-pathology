@@ -18,7 +18,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install umap-learn umap-learn[plot] xarray==0.20.2
+# MAGIC %pip install umap-learn umap-learn[plot] xarray
 
 # COMMAND ----------
 
