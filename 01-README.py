@@ -5,67 +5,72 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Automating Digital Pathology <img src="https://databricks.com/wp-content/themes/databricks/assets/images/header_logo_2x.png" alt="logo" width="250"/> 
-# MAGIC 
-# MAGIC ## Overview
-# MAGIC 
-# MAGIC The tumor proliferation speed or tumor growth is an important biomarker for predicting patient outcomes. Proper assessment of this biomarker is crucial for informing the decisions for the treatment plan for the patient. In a clinical setting, the most common method is to count [mitotic figures](https://www.mypathologyreport.ca/mitotic-figure/#:~:text=A%20mitotic%20figure%20is%20a,at%20tissue%20under%20the%20microscope) under a microscope by a pathologist. The manual counting and subjectivity of the process pose a reproducibility challenge. This has been the main motivation for many efforts to automate this process and use advanced ML techniques.
+# MAGIC # Streamlining Tumor Growth Assessment with <img src="https://databricks.com/wp-content/themes/databricks/assets/images/header_logo_2x.png" alt="logo" width="250"/>
 # MAGIC 
 # MAGIC 
-# MAGIC One of the main challenges however for automating this task, is the fact that whole slide images are rather large. WSI images can vary anywhere between 0.5 to 3.5GB in size, and that can slow down the image preprocessing step which is necessary for any downstream ML application.
-# MAGIC 
-# MAGIC 
-# MAGIC In this solution accelerator, we walk you through a step-by-step process to use databricks capabilities to perform image segmentation and pre-processing on WSI and train a binary classifier that produces a metastasis probability map over a whole slide image (WSI).
+# MAGIC The rate of tumor growth serves as a crucial biomarker for forecasting patient outcomes and influences the formulation of treatment plans. In clinical settings, pathologists typically count mitotic figures under a microscope, but this manual and subjective method presents reproducibility challenges. Consequently, researchers have been motivated to automate this process and employ advanced machine learning (ML) techniques.
 # MAGIC 
 # MAGIC <br>
 # MAGIC <img src="https://hls-eng-data-public.s3.amazonaws.com/img/slide_heatmap.png" alt="logo" width=60% /> 
 # MAGIC </br>
+# MAGIC 
+# MAGIC A primary obstacle in automating tumor growth assessment is the size of whole slide images (WSIs), which can range from 0.5 to 3.5 GB. These large files can hinder the image preprocessing step required for downstream ML applications.
+# MAGIC 
+# MAGIC This solution accelerator provides a step-by-step guide to harness Databricks' capabilities for image segmentation and pre-processing on WSIs. Users will learn how to train a binary classifier that generates a metastasis probability map over a WSI.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Workflow
+# MAGIC We assume that a histopathologist's annotations are already converted into a tabular format (one can use any XML parser to do this conversion). These annotations are subsequently stored in a database in the lakehouse. Utilizing Spark distribution, we create patches from whole slide images (WSI)(already available in the cloud storage) and associate each patch with its corresponding annotation. We then store these information as a table in the database. We then apply a pre-trained image model (InceptionV3) to extract features from these patches and save the generated embeddings. To facilitate exploratory analysis, we use UMAP to visualize these embeddings.
+# MAGIC 
+# MAGIC In parallel, we fine-tune another pre-trained image model (resnet18) and register the best performing model. All these steps are tracked and logged using MLFlow. Ultimately, we employ this model to predict metastasis probabilities and display the results as a heatmap overlaid on a new whole slide image.
+# MAGIC 
+# MAGIC [![](https://mermaid.ink/img/pako:eNp1kz1v2zAQhv_KgUMnZyi6FBoCxBUCG4gKw6rTRctJPFuEKZIlqbhpkP_eY2jVbtQaHgTe8957H-SL6KwkUYhAP0YyHZUKDx6HxgD_HPqoOuXQRFgBBlipEK3D2FttD_ydsdb-hI0n520IFJQ5zNXlMslL0hE1HmkO1Cle88kxx8jIS_LqYS5YV0mx5pJdVNY8fgIaWpKS7cOc3iV4V91t5qFtCm0pGIofP0PF49Bz6M2serjX9vSuvmtqkyiehFRdqqkxGVnd3N6WywLujLERI0HQStK5yq-WD7w69BHsHhJWR-sJMMOcJoAykKbW2zGcR1cuOWfNKbuOQsgJryWZqjP0xVNy5b11PQXYezvA93p9YS6uE_PhL3_uKmKr6aJYV-ztnH7-zwYg2ilXFq2ryQefCA5kyHNNcra0t8Z2fxp7H97l6KMKI2r1i64tTyr25x1fjdY-kYd6AduCS03bQq2nDadO-PxeGbqJo6F_XoMtQ9ztltKF51wthQiO_N76gX1huKBVRr957I48QAn8SoBF7lzc9QVKaTfFdFtgoIiB_yoAv6MWW6VVVNP0NhkuVXAan6HnfQ7owBowdMq7FAsxkB9QSX7NL0nWiNjTQI0o-FPSHkcdG9GYV0ZxjLZ-Np0ooh9pIUYneR3nxy-KPepAr78BMtZdPA?type=png)](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNp1kz1v2zAQhv_KgUMnZyi6FBoCxBUCG4gKw6rTRctJPFuEKZIlqbhpkP_eY2jVbtQaHgTe8957H-SL6KwkUYhAP0YyHZUKDx6HxgD_HPqoOuXQRFgBBlipEK3D2FttD_ydsdb-hI0n520IFJQ5zNXlMslL0hE1HmkO1Cle88kxx8jIS_LqYS5YV0mx5pJdVNY8fgIaWpKS7cOc3iV4V91t5qFtCm0pGIofP0PF49Bz6M2serjX9vSuvmtqkyiehFRdqqkxGVnd3N6WywLujLERI0HQStK5yq-WD7w69BHsHhJWR-sJMMOcJoAykKbW2zGcR1cuOWfNKbuOQsgJryWZqjP0xVNy5b11PQXYezvA93p9YS6uE_PhL3_uKmKr6aJYV-ztnH7-zwYg2ilXFq2ryQefCA5kyHNNcra0t8Z2fxp7H97l6KMKI2r1i64tTyr25x1fjdY-kYd6AduCS03bQq2nDadO-PxeGbqJo6F_XoMtQ9ztltKF51wthQiO_N76gX1huKBVRr957I48QAn8SoBF7lzc9QVKaTfFdFtgoIiB_yoAv6MWW6VVVNP0NhkuVXAan6HnfQ7owBowdMq7FAsxkB9QSX7NL0nWiNjTQI0o-FPSHkcdG9GYV0ZxjLZ-Np0ooh9pIUYneR3nxy-KPepAr78BMtZdPA)
+# MAGIC 
+# MAGIC 
+# MAGIC By leveraging Databricks for image segmentation and pre-processing, as well as training a binary classifier to produce metastasis probability maps, the automation of tumor growth assessment becomes more achievable. This innovative approach addresses the challenges posed by manual counting and large WSI sizes, ultimately improving the overall efficiency and reliability of the process.
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC 
 # MAGIC ## Dataset
 # MAGIC The data used in this solution accelerator is from the [Camelyon16 Grand Challenge](http://gigadb.org/dataset/100439), along with annotations based on hand-drawn metastasis outlines. We use curated annotations for this dataset obtained from Baidu Research [github repository](https://github.com/baidu-research/NCRF).
 # MAGIC 
 # MAGIC 
 # MAGIC ## Notebooks
-# MAGIC We use Apache Spark's parallelization capabilities, using pandas_udf, to generate tumor/normal patches based on annotation data as well as feature extraction, using a pre-trained [InceptionV3](https://keras.io/api/applications/inceptionv3/). We use the embeddings obtained this way to explore clusters of patches by visualizing 2d and 3d embeddings, using UMAP. We then use transfer learning with pytorch to train a convnet to classify tumor vs normal patches and later use the resulting model to overlay a metastasis heatmap on a new slide.
+# MAGIC We use Apache Spark's parallelization capabilities, using `pandas_udf`, to generate tumor/normal patches based on annotation data as well as feature extraction, using a pre-trained [InceptionV3](https://keras.io/api/applications/inceptionv3/). We use the embeddings obtained this way to explore clusters of patches by visualizing 2d and 3d embeddings, using UMAP. We then use transfer learning with pytorch to train a convnet to classify tumor vs normal patches and later use the resulting model to overlay a metastasis heatmap on a new slide.
 # MAGIC 
 # MAGIC 
 # MAGIC This solution accelerator contains the following notebooks:
 # MAGIC 
-# MAGIC - `config`: configuring paths and other settings. Also for the first time setting up a cluster for patch generation, use the `initscript` generated by the config notebook to install `openSlide` on your cluster.
+# MAGIC - [config]($./config/0-config): configuring paths and other settings. Also for the first time setting up a cluster for patch generation, use the `initscript` generated by the config notebook to install `openSlide` on your cluster.
 # MAGIC 
-# MAGIC - `1-create-annotation-deltalake`: to download annotations and write to delta.
+# MAGIC - [create-annotation-deltalake]($./00-create-annotation-deltalake): to download annotations and write to delta.
 # MAGIC 
-# MAGIC - `2-patch-generation`: This notebook generates patches from WSI based on annotations. 
+# MAGIC - [patch-generation]($./02-patch-generation): This notebook generates patches from WSI based on annotations. 
 # MAGIC 
-# MAGIC - `3-feature-extraction`: To extract image embeddings using `InceptionV3` in a distributed manner
+# MAGIC - [feature-extraction]($./03-feature-extraction): To extract image embeddings using `InceptionV3` in a distributed manner
 # MAGIC 
-# MAGIC - `4-unsupervised-learning`: dimensionality reduction and cluster inspection with UMAP
+# MAGIC - [unsupervised-learning]($./04-unsupervised-learning): dimensionality reduction and cluster inspection with UMAP
 # MAGIC 
-# MAGIC - `5-training`: In this notebook we tune and train a binary classifier to classify tumor/normal patches with pytorch and log the model with mlflow.
+# MAGIC - [training]($./05-training): In this notebook we tune and train a binary classifier to classify tumor/normal patches with pytorch and log the model with mlflow.
 # MAGIC 
+# MAGIC - [metastasis-heatmap]($./06-metastasis-heatmap): This notebook we use the model trained in the previous step to generate a metastasis probability heatmap for a given slide.
 # MAGIC 
-# MAGIC - `6-metastasis-heatmap`: This notebook we use the model trained in the previous step to generate a metastasis probability heatmap for a given slide.
-# MAGIC 
-# MAGIC 
-# MAGIC - `definitions`: This notebook contains definitions for some of the functions that are used in multiple places (for example patch generation and pre processing)
+# MAGIC - [definitions]($./definitions): This notebook contains definitions for some of the functions that are used in multiple places (for example patch generation and pre processing)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Cluster Setup for patch generation
+# MAGIC ## Workflow Orchestration
+# MAGIC We have included a [RUNME]($./RUNME) notebook within this package. To run the end-to-end workflow, simply run this notebook (by attaching it to any running cluster). By running the notebook you create a [databricks workflow runner](https://docs.databricks.com/workflows/index.html) (`digital-pathology`) that runs all the steps in this package, inclduing setting up clusters for each part of your experiment. 
 # MAGIC 
-# MAGIC For the first time running this workflow, you need to create an `Init Script` to install `openslide-tools` from [OpenSlide library](https://openslide.org/) on your cluster. By running the configuration notebook this initscript is generated and you only need to specify the path `/tmp/openslide/openslide-tools.sh` 
-# MAGIC 
-# MAGIC This script then should be [attached to the cluster we are using](https://docs.databricks.com/user-guide/clusters/init-scripts.html#configure-a-cluster-scoped-init-script).
-# MAGIC 
-# MAGIC In your cluster's `Init Script` configuration pane, add the path `/tmp/openslide/openslide-tools.sh`. 
-# MAGIC After doing so, **re-start your cluster** and attached this notebook to the cluster before running the rest of the commands.
-# MAGIC After the cluster re-starts, go to Libraries tab on your cluster configuration and install **`openslide-python`** from PyPi.
-# MAGIC 
-# MAGIC You can use the same cluster for notebooks `2,3` and `4`. 
-# MAGIC 
-# MAGIC ## Training the Model
-# MAGIC To train the model you can either use cpu or gpu cluster (faster training with GPU). We have tested the training on 5000 images on a single node `g4dn.4xlarge` with 64MB memory (recommended) which took ~3.5 min with 4 epochs. for larger number of images you can use [distributed methods for training your model](https://docs.databricks.com/applications/machine-learning/train-model/distributed-training/index.html#distributed-training)
+# MAGIC ## Cluster Setup
+# MAGIC This workflow depends on the [openSlide](https://openslide.org/)package which is a C library. Fortunatley databricks open standards makes it seemless to install third party pckages in your cluster. To do so, we first create an `Init Script` to install `openslide-tools` from [OpenSlide library](https://openslide.org/) on your cluster.
+# MAGIC Note that all this work is automatically done within the RUNME notebook and you do not need to manually do install anything. After running the notebook, you'll notice that there are three clsuters available to you:
+# MAGIC 1. 
 
 # COMMAND ----------
 

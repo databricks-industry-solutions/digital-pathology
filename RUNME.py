@@ -41,39 +41,29 @@ job_json = {
         },
         "tasks": [
             {
+                "task_key": "Pathology_00",
+                "run_if": "ALL_SUCCESS",
+                "notebook_task": {
+                    "notebook_path": "00-create-annotation-deltalake",
+                    "source": "WORKSPACE"
+                },
                 "job_cluster_key": "pathology_cluster",
-                "notebook_task": {
-                    "notebook_path": f"00-create-annotation-deltalake",
-                    "base_parameters": {}
-                },
-                "task_key": "Pathology_00"
-            },  
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
             {
-                "job_cluster_key": "pathology_cluster_w_init",
-                "notebook_task": {
-                    "notebook_path": f"01-README",
-                    "base_parameters": {}
-                },
-                "libraries": [
-                    {
-                        "pypi": {
-                            "package": "openslide-python"
-                        }
-                    }
-                ],
                 "task_key": "Pathology_01",
                 "depends_on": [
                     {
                         "task_key": "Pathology_00"
                     }
-                ]
-            },
-            {
-                "job_cluster_key": "pathology_cluster_w_init",
-                "libraries": [],
+                ],
+                "run_if": "ALL_SUCCESS",
                 "notebook_task": {
-                    "notebook_path": f"02-patch-generation"
+                    "notebook_path": "01-README",
+                    "source": "WORKSPACE"
                 },
+                "job_cluster_key": "pathology_cluster_w_init",
                 "libraries": [
                     {
                         "pypi": {
@@ -81,18 +71,22 @@ job_json = {
                         }
                     }
                 ],
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
                 "task_key": "Pathology_02",
                 "depends_on": [
                     {
                         "task_key": "Pathology_01"
                     }
-                ]
-            },
-            {
-                "job_cluster_key": "pathology_cluster_w_init",
+                ],
+                "run_if": "ALL_SUCCESS",
                 "notebook_task": {
-                    "notebook_path": f"03-feature-extraction"
+                    "notebook_path": "02-patch-generation",
+                    "source": "WORKSPACE"
                 },
+                "job_cluster_key": "pathology_cluster_w_init",
                 "libraries": [
                     {
                         "pypi": {
@@ -100,70 +94,101 @@ job_json = {
                         }
                     }
                 ],
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
                 "task_key": "Pathology_03",
                 "depends_on": [
                     {
                         "task_key": "Pathology_02"
                     }
-                ]
-            },
-            {
-                "job_cluster_key": "pathology_cluster_w_init",
+                ],
+                "run_if": "ALL_SUCCESS",
                 "notebook_task": {
-                    "notebook_path": f"04-unsupervised-learning"
+                    "notebook_path": "03-feature-extraction",
+                    "source": "WORKSPACE"
                 },
+                "job_cluster_key": "pathology_cluster_w_init",
                 "libraries": [
                     {
                         "pypi": {
                             "package": "openslide-python"
-                        },
+                        }
                     }
                 ],
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
                 "task_key": "Pathology_04",
                 "depends_on": [
                     {
                         "task_key": "Pathology_03"
                     }
-                ]
+                ],
+                "run_if": "ALL_SUCCESS",
+                "notebook_task": {
+                    "notebook_path": "04-unsupervised-learning",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "pathology_cluster_w_init",
+                "libraries": [
+                    {
+                        "pypi": {
+                            "package": "openslide-python"
+                        }
+                    }
+                ],
+                "timeout_seconds": 0,
+                "email_notifications": {}
             },
-             {
-                 "job_cluster_key": "pathology_gpu_cluster_w_init",
-                 "notebook_task": {
-                     "notebook_path": f"05-training"
-                 },
-                 "libraries": [
+            {
+                "task_key": "Pathology_05",
+                "depends_on": [
+                    {
+                        "task_key": "Pathology_02"
+                    }
+                ],
+                "run_if": "ALL_SUCCESS",
+                "notebook_task": {
+                    "notebook_path": "05-training",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "pathology_gpu_cluster_w_init",
+                "libraries": [
                     {
                         "pypi": {
                             "package": "openslide-python"
                         }
                     }
                 ],
-                 "task_key": "Pathology_05",
-                 "depends_on": [
-                     {
-                         "task_key": "Pathology_04"
-                     }
-                 ]
-             },
-             {
-                 "job_cluster_key": "pathology_cluster_w_init",
-                 "notebook_task": {
-                     "notebook_path": f"06-metastasis-heatmap"
-                 },
-                 "libraries": [
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            },
+            {
+                "task_key": "Pathology_06",
+                "depends_on": [
+                    {
+                        "task_key": "Pathology_05"
+                    }
+                ],
+                "run_if": "ALL_SUCCESS",
+                "notebook_task": {
+                    "notebook_path": "06-metastasis-heatmap",
+                    "source": "WORKSPACE"
+                },
+                "job_cluster_key": "pathology_cluster_w_init",
+                "libraries": [
                     {
                         "pypi": {
                             "package": "openslide-python"
                         }
                     }
                 ],
-                 "task_key": "Pathology_06",
-                 "depends_on": [
-                     {
-                         "task_key": "Pathology_05"
-                     }
-                 ]
-             }
+                "timeout_seconds": 0,
+                "email_notifications": {}
+            }
         ],
         "job_clusters": [
             {
