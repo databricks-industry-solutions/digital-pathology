@@ -20,12 +20,9 @@ max_n_patches=int(dbutils.widgets.get('max_n_patches'))
 # COMMAND ----------
 
 # DBTITLE 1,generate the init script
-dbutils.fs.mkdirs('/tmp/openslide/')
-dbutils.fs.put('/tmp/openslide/openslide-tools.sh',
-               """
-               #!/bin/bash
-               apt-get install -y openslide-tools
-               """, overwrite=True)
+with open("../openslide-tools.sh", "w") as f:
+  f.write("""#!/bin/bash
+apt-get install -y openslide-tools""")
 
 # COMMAND ----------
 

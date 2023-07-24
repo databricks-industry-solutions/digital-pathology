@@ -25,10 +25,12 @@
 
 # DBTITLE 0,Install util packages
 # MAGIC %pip install git+https://github.com/databricks-academy/dbacademy@v1.0.13 git+https://github.com/databricks-industry-solutions/notebook-solution-companion@safe-print-html --quiet --disable-pip-version-check
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
 from solacc.companion import NotebookSolutionCompanion
+nsc = NotebookSolutionCompanion()
 
 # COMMAND ----------
 
@@ -207,8 +209,8 @@ job_json = {
                     "node_type_id": {"AWS": "i3.xlarge", "MSA": "Standard_DS3_v2", "GCP": "n1-highmem-4"},
                     "init_scripts": [
                         {
-                            "dbfs": {
-                                "destination": "dbfs:/tmp/openslide/openslide-tools.sh"
+                            "workspace": {
+                                "destination": f"{nsc.solacc_path}/openslide-tools.sh"
                             }
                         }
                     ]
@@ -222,8 +224,8 @@ job_json = {
                     "node_type_id": {"AWS": "g4dn.4xlarge", "MSA": "Standard_NC6s_v3", "GCP": "a2-highgpu-1g"},
                     "init_scripts": [
                         {
-                            "dbfs": {
-                                "destination": "dbfs:/tmp/openslide/openslide-tools.sh"
+                            "workspace": {
+                                "destination": f"{nsc.solacc_path}/openslide-tools.sh"
                             }
                         }
                     ]
@@ -236,7 +238,7 @@ job_json = {
 
 dbutils.widgets.dropdown("run_job", "False", ["True", "False"])
 run_job = dbutils.widgets.get("run_job") == "True"
-NotebookSolutionCompanion().deploy_compute(job_json, run_job=run_job)
+nsc.deploy_compute(job_json, run_job=run_job)
 
 # COMMAND ----------
 
