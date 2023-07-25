@@ -19,13 +19,6 @@ max_n_patches=int(dbutils.widgets.get('max_n_patches'))
 
 # COMMAND ----------
 
-# DBTITLE 1,generate the init script
-with open("../openslide-tools.sh", "w") as f:
-  f.write("""#!/bin/bash
-apt-get install -y openslide-tools""")
-
-# COMMAND ----------
-
 # DBTITLE 1,specify path to raw data for each project
 project_data_paths = {'digital-pathology':"/databricks-datasets/med-images/camelyon16/",'omop-cdm-100K':"s3://hls-eng-data-public/data/rwe/all-states-90K/","omop-cdm-10K":"s3://hls-eng-data-public/data/synthea/",'psm':"s3://hls-eng-data-public/data/rwe/dbx-covid-sim/"}
 
