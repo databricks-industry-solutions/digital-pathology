@@ -1,4 +1,6 @@
-# Automating Digital Pathology <img src="https://databricks.com/wp-content/themes/databricks/assets/images/header_logo_2x.png" alt="logo" width="250"/> 
+<img src=https://hls-eng-data-public.s3.amazonaws.com/img/Databricks_HLS.png width="600px">
+
+# Automating Digital Pathology  
 
 ## Overview
 
