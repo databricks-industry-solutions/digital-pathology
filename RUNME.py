@@ -1,4 +1,8 @@
 # Databricks notebook source
+# test mmt_dbr14.3ML_sn_test
+
+# COMMAND ----------
+
 # MAGIC %md This notebook sets up the companion cluster(s) to run the solution accelerator. It also creates the Workflow to illustrate the order of execution. Happy exploring! 
 # MAGIC 🎉
 # MAGIC
@@ -24,7 +28,7 @@
 # COMMAND ----------
 
 # DBTITLE 0,Install util packages
-# MAGIC %pip install git+https://github.com/databricks-academy/dbacademy@v1.0.13 git+https://github.com/databricks-industry-solutions/notebook-solution-companion@safe-print-html --quiet --disable-pip-version-check
+# MAGIC %pip install git+https://github.com/databricks-academy/dbacademy@v1.0.13 git+https://github.com/databricks-industry-solutions/notebook-solution-companion@safe-print-html pyspark>=3.1.2 --quiet --disable-pip-version-check
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -35,11 +39,14 @@ nsc = NotebookSolutionCompanion()
 # COMMAND ----------
 
 job_json = {
+        "name": "[RUNNER] digital-pathology-TEST",
         "timeout_seconds": 28800,
         "max_concurrent_runs": 1,
         "tags": {
             "usage": "solacc_testing",
-            "group": "HLS"
+            "group": "HLS",
+            "do_not_delete" : True,
+            "removeAfter" : "2025-01-01" 
         },
         "tasks": [
             {
@@ -49,7 +56,7 @@ job_json = {
                     "notebook_path": "00-create-annotation-deltalake",
                     "source": "WORKSPACE"
                 },
-                "job_cluster_key": "pathology_cluster",
+                "job_cluster_key": "pathology_14-3-x_cpu_cluster",
                 "timeout_seconds": 0,
                 "email_notifications": {}
             },
@@ -65,7 +72,7 @@ job_json = {
                     "notebook_path": "01-README",
                     "source": "WORKSPACE"
                 },
-                "job_cluster_key": "pathology_cluster_w_init",
+                "job_cluster_key": "pathology_14-3-x_cpu_cluster_w_init",
                 "libraries": [
                     {
                         "pypi": {
@@ -88,7 +95,7 @@ job_json = {
                     "notebook_path": "02-patch-generation",
                     "source": "WORKSPACE"
                 },
-                "job_cluster_key": "pathology_cluster_w_init",
+                "job_cluster_key": "pathology_14-3-x_cpu_cluster_w_init",
                 "libraries": [
                     {
                         "pypi": {
@@ -111,7 +118,7 @@ job_json = {
                     "notebook_path": "03-feature-extraction",
                     "source": "WORKSPACE"
                 },
-                "job_cluster_key": "pathology_cluster_w_init",
+                "job_cluster_key": "pathology_14-3-x_cpu_cluster_w_init",
                 "libraries": [
                     {
                         "pypi": {
@@ -134,7 +141,7 @@ job_json = {
                     "notebook_path": "04-unsupervised-learning",
                     "source": "WORKSPACE"
                 },
-                "job_cluster_key": "pathology_cluster_w_init",
+                "job_cluster_key": "pathology_14-3-x_cpu_cluster_w_init",
                 "libraries": [
                     {
                         "pypi": {
@@ -157,7 +164,7 @@ job_json = {
                     "notebook_path": "05-training",
                     "source": "WORKSPACE"
                 },
-                "job_cluster_key": "pathology_gpu_cluster_w_init",
+                "job_cluster_key": "pathology_14-3-x_gpu_cluster_w_init",
                 "libraries": [
                     {
                         "pypi": {
@@ -180,7 +187,8 @@ job_json = {
                     "notebook_path": "06-metastasis-heatmap",
                     "source": "WORKSPACE"
                 },
-                "job_cluster_key": "pathology_cluster_w_init",
+                # "job_cluster_key": "pathology_cluster_w_init",
+                "job_cluster_key": "pathology_14-3-x_gpu_cluster_w_init",
                 "libraries": [
                     {
                         "pypi": {
@@ -194,17 +202,19 @@ job_json = {
         ],
         "job_clusters": [
             {
-                "job_cluster_key": "pathology_cluster",
+                "job_cluster_key": "pathology_14-3-x_cpu_cluster",
                 "new_cluster": {
-                    "spark_version": "12.2.x-cpu-ml-scala2.12",
+                    # "spark_version": "12.2.x-cpu-ml-scala2.12",
+                    "spark_version": "14.3.x-cpu-ml-scala2.12",
                     "num_workers": 2,
                     "node_type_id": {"AWS": "i3.xlarge", "MSA": "Standard_DS3_v2", "GCP": "n1-highmem-4"}
                 }
             },
             {
-                "job_cluster_key": "pathology_cluster_w_init",
+                "job_cluster_key": "pathology_14-3-x_cpu_cluster_w_init",
                 "new_cluster": {
-                    "spark_version": "12.2.x-cpu-ml-scala2.12",
+                    # "spark_version": "12.2.x-cpu-ml-scala2.12",
+                    "spark_version": "14.3.x-cpu-ml-scala2.12",
                     "num_workers": 2,
                     "node_type_id": {"AWS": "i3.xlarge", "MSA": "Standard_DS3_v2", "GCP": "n1-highmem-4"},
                     "init_scripts": [
@@ -217,10 +227,11 @@ job_json = {
                 }
             },
             {
-                "job_cluster_key": "pathology_gpu_cluster_w_init",
+                "job_cluster_key": "pathology_14-3-x_gpu_cluster_w_init",
                 "new_cluster": {
-                    "spark_version": "12.2.x-gpu-ml-scala2.12",
-                    "num_workers": 1,
+                    # "spark_version": "12.2.x-gpu-ml-scala2.12",
+                    "spark_version": "14.3.x-gpu-ml-scala2.12",
+                    "num_workers": 2, #1,
                     "node_type_id": {"AWS": "g4dn.4xlarge", "MSA": "Standard_NC6s_v3", "GCP": "a2-highgpu-1g"},
                     "init_scripts": [
                         {

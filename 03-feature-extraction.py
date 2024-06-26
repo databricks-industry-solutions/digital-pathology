@@ -7,10 +7,10 @@
 # MAGIC %md
 # MAGIC # Distributed feature extraction
 # MAGIC In this notebook we use spark's `pandas_udfs` to efficiently distribute feature extraction process. The extracted features are then can be used to visually inspect the structure of extracted patches.
-# MAGIC 
-# MAGIC 
+# MAGIC
+# MAGIC
 # MAGIC <img src="https://cloud.google.com/tpu/docs/images/inceptionv3onc--oview.png">
-# MAGIC 
+# MAGIC
 # MAGIC We use embeddings based on a pre-trained deep neural network (in this example, [InceptionV3](https://arxiv.org/abs/1512.00567)) to extract features from each patch.
 # MAGIC Associated methods for feature extraction are defined within `./definitions` notebook in this package.
 
@@ -18,6 +18,12 @@
 
 # MAGIC %md
 # MAGIC ## 0. Initial Configuration
+
+# COMMAND ----------
+
+# DBTITLE 1,[init file enable]
+# MAGIC %pip install openslide-python
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -29,10 +35,13 @@ import json
 import os
 from pprint import pprint
 
-project_name='digital-pathology'
+project_name='digital-pathology' #original
+project_name2use = f"{project_name}".replace('-','_') ## for UC
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
-config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
+
 
 try:
   with open(config_path,'rb') as f:
@@ -72,6 +81,10 @@ display(annotation_df)
 
 # COMMAND ----------
 
+IMG_PATH
+
+# COMMAND ----------
+
 # DBTITLE 1,Create a dataframe of images
 patch_df= (
   spark.read.format('binaryFile').load(f'{IMG_PATH}/*/*/*.jpg').repartition(32)
@@ -103,6 +116,10 @@ dataset_df.display()
 
 # COMMAND ----------
 
+# import openslide
+
+# COMMAND ----------
+
 # MAGIC %run ./definitions
 
 # COMMAND ----------
@@ -125,7 +142,7 @@ features_df.count()
 
 # COMMAND ----------
 
-features_df.limit(1).display()
+features_df.sample(0.1, False).limit(2).display()
 
 # COMMAND ----------
 
@@ -140,3 +157,18 @@ features_df.write.format('delta').mode('overWrite').option("mergeSchema", "true"
 # COMMAND ----------
 
 display(dbutils.fs.ls(f"{BASE_PATH}/delta/features"))
+
+# COMMAND ----------
+
+# BASE_PATH.removeprefix("/Volumes/").removesuffix("/files").replace('/','.').replace('digital-pathology','`digital-pathology`')
+
+# COMMAND ----------
+
+## save as delta Table as well 
+# features_df.write.format('delta').mode('overWrite').option("mergeSchema", "true").saveAsTable(f"{BASE_PATH.removeprefix('/Volumes/').removesuffix('/files').replace('/','.').replace('digital-pathology','`digital-pathology`')}.features")
+
+features_df.write.format('delta').mode('overWrite').option("mergeSchema", "true").saveAsTable(f"{BASE_PATH.removeprefix('/Volumes/').removesuffix('/files').replace('/','.')}.features")
+
+# COMMAND ----------
+
+

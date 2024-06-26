@@ -11,12 +11,18 @@
 
 # COMMAND ----------
 
+!nvidia-smi
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## 0. Initial Config
 
 # COMMAND ----------
 
 # MAGIC %pip install pytorch_lightning==1.6.5
+# MAGIC # %pip install openslide-python
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -41,7 +47,7 @@ import mlflow.pytorch
 from mlflow.tracking import MlflowClient
 
 # import mlflow
-# plt.ion()   # interactive mode
+# plt.ion() # interactive mode
 
 # COMMAND ----------
 
@@ -49,10 +55,13 @@ import json
 import os
 from pprint import pprint
 
-project_name='digital-pathology'
+project_name='digital-pathology' #original
+project_name2use = f"{project_name}".replace('-','_') ## for UC
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
-config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
+
 
 try:
   with open(config_path,'rb') as f:
@@ -69,11 +78,19 @@ experiment_info=mlflow.set_experiment(settings['experiment_name'])
 
 # COMMAND ----------
 
+IMG_PATH
+
+# COMMAND ----------
+
+experiment_info
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## 1. Load Data
 # MAGIC We will use torchvision and `torch.utils.data` packages for loading the data.
 # MAGIC Our aim is to train a model to classify extracted patches into normal `(0)` and tumor `(1)` based on provided annotations. Usually, this is a very small dataset to generalize upon, if trained from scratch. Since we are using transfer learning, we should be able to generalize reasonably well.
-# MAGIC 
+# MAGIC
 # MAGIC This dataset is a very small subset of imagenet.
 
 # COMMAND ----------
@@ -95,7 +112,8 @@ data_transforms = {
     ]),
 }
 
-data_dir = f'/dbfs{IMG_PATH}'
+# data_dir = f'/dbfs{IMG_PATH}'
+data_dir = f'{IMG_PATH}'
 image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x), data_transforms[x]) for x in ['train', 'test']}
 dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=4, shuffle=True, num_workers=4) for x in ['train', 'test']}
 dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'test']}
@@ -112,7 +130,7 @@ print(f"train/test dataset: {dataset_sizes}")
 # MAGIC %md
 # MAGIC ## 2. Training the model
 # MAGIC Now, let’s write a general function to train a model. Here, we will illustrate:
-# MAGIC 
+# MAGIC
 # MAGIC - Scheduling the learning rate
 # MAGIC - Saving the best model
 # MAGIC In the following, parameter scheduler is an [LR scheduler object](https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate) from `torch.optim.lr_scheduler`.
@@ -194,11 +212,19 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=5, log_model=
       model.load_state_dict(best_model_wts)
       
       mlflow.log_metric('best_accuracy',float(best_acc))
+      mlflow.log_params({"optimizer": exp_lr_scheduler.optimizer, "num_epochs":num_epochs})
       
       if(log_model):
-        mlflow.pytorch.log_model(model_ft,'resent-dp')
+        mlflow.pytorch.log_model(model_ft,
+                                 'resnet-dp',
+                                 # example_input
+                                 # signature 
+                                 )
         
     return(run.info)
+    
+    # https://mlflow.org/docs/latest/deep-learning/pytorch/guide/index.html
+
 
 # COMMAND ----------
 
@@ -216,23 +242,47 @@ model_ft.fc = nn.Linear(num_ftrs, 2)
 
 model_ft = model_ft.to(device)
 
+# ## UPDATE TO USE ALL CORES 
+# if torch.cuda.is_available():
+#   print(f'using {torch. cuda. device_count() } available cuda cores .... ')
+#   model_ft = model_ft.cuda()
+#   model_ft = torch.nn.DataParallel(model_ft)  # This wraps the model for parallel GPU usage
+# else:
+#   print('using cpu .... ')
+#   model_ft = model_ft.to(device)
+
 criterion = nn.CrossEntropyLoss()
 
 # Observe that all parameters are being optimized
-optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.9)
+optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.95)
+# optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.9)
+# optimizer_ft = optim.Adam(model_ft.parameters(), lr=0.001)
 
 # Decay LR by a factor of 0.1 every 7 epochs
-exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
+# exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
+exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=1, gamma=0.025)
+
+# COMMAND ----------
+
+exp_lr_scheduler.optimizer  
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Train and evaluate
-# MAGIC Depending on the number of images, this step can take several minutes. For example for 500 patches on a `cpu` machine it takes `5` min to train. If you use a single-node cluster with 1 `gpu` this step (with 4 epochs) will take `30s`.
+# MAGIC Depending on the number of images, this step can take several minutes. 
+# MAGIC For example (with the initial default parameters for optimizer_ft), for 500 patches on a `cpu` machine it takes `5` min to train. If you use a single-node cluster with 1 `gpu` this step (with 4 epochs) will take `30s`.
 
 # COMMAND ----------
 
-run_info=train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=4,log_model=True)
+# run_info=train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=4,log_model=True)
+
+## better on 1 compute (CPU/GPU) | When there's a lot of DATA --> DataParallel might make sense
+run_info=train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=10,log_model=True)
+
+# COMMAND ----------
+
+# run_info
 
 # COMMAND ----------
 
@@ -245,3 +295,7 @@ df = mlflow.search_runs([settings['experiment_id']])
 # COMMAND ----------
 
 df.sort_values(by='metrics.best_accuracy',ascending=False).display()
+
+# COMMAND ----------
+
+

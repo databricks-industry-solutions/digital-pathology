@@ -5,7 +5,18 @@
 
 # COMMAND ----------
 
+# %sql
+# DROP SCHEMA IF EXISTS mmt.`digital-pathology` CASCADE;
+
+# COMMAND ----------
+
+# DBTITLE 1,reset widgets
+dbutils.widgets.removeAll()
+
+# COMMAND ----------
+
 dbutils.widgets.text('project_name','digital-pathology')
+# dbutils.widgets.text('project_name','digital_pathology') ## better to avoid '-' #?
 dbutils.widgets.dropdown('overwrite_old_patches','no',['yes','no'])
 dbutils.widgets.text('max_n_patches','500')
 
@@ -24,37 +35,57 @@ project_data_paths = {'digital-pathology':"/databricks-datasets/med-images/camel
 
 # COMMAND ----------
 
+# dbutils.fs.mkdirs("/Volumes/mmt/digital-pathology/files/test")
+# dbutils.fs.rm("/Volumes/mmt/digital-pathology/files/test", recurse=True)
+# dbutils.fs.rm('/mmt.digital-pathology', recurse=True)
+
+# COMMAND ----------
+
 # DBTITLE 1,class for project setup
 import mlflow
 import os
 import hashlib
+
 class SolAccUtil:
   def __init__(self,project_name,max_n_patches=max_n_patches,patch_size=299,level=0,data_path=None,base_path=None):
     user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
-    project_name = project_name.strip().replace(' ','-')
+    catalog ='mmt'
     user_uid = abs(hash(user)) % (10 ** 5)
-    if base_path!=None:
-      base_path=base_path
-    else:
-      base_path = os.path.join('/home',user,project_name)
+    project_name2use = f"{project_name}".replace('-','_')
+
+    # if base_path!=None:
+    #   base_path=base_path
+    # else:
+    #   base_path = os.path.join('/home',user,project_name)
+
+    # base_path = f"{catalog}.{project_name}" #f"/Volumes/{catalog}/{project_name}/files"
+    base_path = f"/Volumes/{catalog}/{project_name2use}/files"
       
     if data_path != None:
       data_path=data_path
     else:
-      data_path=project_data_paths[project_name]
+      data_path=project_data_paths[project_name] ## keep_same/original
      
     dbutils.fs.mkdirs(base_path)
-    delta_path=os.path.join(base_path,project_name,'delta')
-    experiment_name=os.path.join('/Users',user,project_name)
+    # delta_path=os.path.join(base_path,project_name,'delta')
+    # delta_path= f"{catalog}.{project_name}.delta" #os.path.join(base_path.replace('files',''),'delta')
+    delta_path= f"/Volumes/{catalog}/{project_name2use}/files/delta"
+
+    experiment_name=os.path.join('/Users',user,project_name2use)
+    # experiment_name = f"/Volumes/{catalog}/{project_name}/files"
+
     
     if not mlflow.get_experiment_by_name(experiment_name):
       experiment_id = mlflow.create_experiment(experiment_name)
       experiment = mlflow.get_experiment(experiment_id)
     else:
       experiment = mlflow.get_experiment_by_name(experiment_name)
+      
     self.settings = {}
     self.settings['max_n_patches']=max_n_patches
-    self.settings['img_path']=f'/ml/{project_name}-{user_uid}'     
+    # self.settings['img_path']=f'/ml/{project_name}-{user_uid}' 
+    self.settings['img_path']=f'/Volumes/{catalog}/{project_name2use}/files/imgs' 
+
     self.settings['base_path']=base_path
     self.settings['delta_path']=delta_path
     self.settings['data_path']=data_path
@@ -71,7 +102,9 @@ class SolAccUtil:
     import requests
     fname=url.split('/')[-1]
     r = requests.get(url)
-    out_file=f'/dbfs{dest_path}/{fname}'
+    # out_file=f'/dbfs{dest_path}/{fname}'
+    out_file=f'{dest_path}/{fname}'
+
     print('-*-'*20)
     print(f'downloading file {fname} to {out_file}')
     print('-*-'*20)
@@ -80,8 +113,11 @@ class SolAccUtil:
       print(f'unpacking file {fname} into {dest_path}')
       import tarfile
     # open file
-      file = tarfile.open(os.path.join('/dbfs',dest_path,fname))
-      file.extractall(os.path.join('/dbfs',dest_path))
+      # file = tarfile.open(os.path.join('/dbfs',dest_path,fname))
+      # file.extractall(os.path.join('/dbfs',dest_path))
+
+      file = tarfile.open(os.path.join('dbfs:',dest_path,fname))
+      file.extractall(os.path.join('dbfs:',dest_path))
       file.close()
     
   def print_info(self):
@@ -103,22 +139,37 @@ class SolAccUtil:
 
 # COMMAND ----------
 
-# DBTITLE 1,define project settings
+project_name2use = f"{project_name}".replace('-','_')
+project_name2use
+
+# COMMAND ----------
+
 project_utils = SolAccUtil(project_name=project_name)
 
 # COMMAND ----------
 
 # DBTITLE 1,write configurations for later access
 import json 
-with open(f"/dbfs/FileStore/{project_utils.settings['user_uid']}_{project_name}_configs.json",'w') as f:
+# with open(f"/dbfs/FileStore/{project_utils.settings['user_uid']}_{project_name}_configs.json",'w') as f:
+
+## update to UC Volumes 
+with open(f"/Volumes/mmt/{project_name2use}/files/{project_utils.settings['user_uid']}_{project_name2use}_configs.json",'w') as f:
   f.write(json.dumps(project_utils.settings,indent=4))
 f.close()
+
+# COMMAND ----------
+
+project_utils.settings
 
 # COMMAND ----------
 
 # DBTITLE 1,display project settings
 project_utils.print_info()
 print('use project_utils for access to settings')
+
+# COMMAND ----------
+
+project_utils.settings['img_path']
 
 # COMMAND ----------
 
@@ -133,3 +184,7 @@ try:
   display(dbutils.fs.ls(project_utils.settings['img_path']))
 except:
   print('no existing patches')
+
+# COMMAND ----------
+
+

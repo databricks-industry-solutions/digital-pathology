@@ -8,7 +8,7 @@
 # MAGIC # Feature exploration: Dimensionality reduction
 # MAGIC In this notebook, we explore the structure of extracted features using [Uniform Manifold Approximation and Projection (UMAP)](https://umap-learn.readthedocs.io/en/latest/) method.
 # MAGIC To learn more visit: https://github.com/lmcinnes/umap
-# MAGIC 
+# MAGIC
 # MAGIC In this notebook we use UMAP embeddings to visually inspect the extracted features from our generated patches which are stored in deltalake and examine the correlation between clusters of patches and labels. This method, in conjunction with clustering methods such as k-means can be used to determine the label of unlabeled patches based on the cluster they belong to (assuming a subset of patches have associated annotations), and help discover new patterns in the data.
 
 # COMMAND ----------
@@ -18,7 +18,12 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install umap-learn umap-learn[plot] xarray
+# %pip install umap-learn umap-learn[plot] xarray
+
+%pip install --upgrade pip
+%pip install umap-learn>=0.5.6 umap-learn[plot]>=0.5.6 xarray==2023.12.0 scikit-learn>=0.22.0 importlib-metadata scipy>=1.4.1 pyspark>=3.1.2 numpy>=1.23.5 scipy>=1.4.1 --upgrade
+
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -26,10 +31,13 @@ import json
 import os
 from pprint import pprint
 
-project_name='digital-pathology'
+project_name='digital-pathology' #original
+project_name2use = f"{project_name}".replace('-','_') ## for UC
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
-config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
+
 
 try:
   with open(config_path,'rb') as f:
@@ -50,7 +58,7 @@ mlflow.set_experiment(settings['experiment_name'])
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC ## 1. Get data ready for clustering and visualization
 
 # COMMAND ----------
@@ -67,7 +75,10 @@ import pandas as pd
 # COMMAND ----------
 
 # DBTITLE 1,Load extracted features from delta
-img_features_df=spark.read.load(f"{BASE_PATH}/delta/features")
+# img_features_df=spark.read.load(f"{BASE_PATH}/delta/features")
+# img_features_df=spark.read.table("mmt.`digital-pathology`.features")
+
+img_features_df=spark.read.table(f"mmt.{project_name2use}.features")
 
 # COMMAND ----------
 
@@ -105,7 +116,7 @@ features_mat.shape
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC ## 2. Dimensionality Reduction Using UMAP 
 
 # COMMAND ----------
@@ -188,3 +199,7 @@ embeddings3d_df=pd.concat([pd.DataFrame(mpper_3d.embedding_,columns=['c1','c2','
 import plotly.express as px
 fig = px.scatter_3d(embeddings3d_df,x='c1',y='c2',z='c3',color='label',hover_name='slide_id',width=1000,height=700)
 fig.show()
+
+# COMMAND ----------
+
+

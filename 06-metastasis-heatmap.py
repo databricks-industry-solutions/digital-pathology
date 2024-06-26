@@ -6,13 +6,37 @@
 
 # MAGIC %md
 # MAGIC # Create a metastasis probability heatmap
-# MAGIC In the previous step, we re-trained a resent model for our classification task and logged the model using ML flow. In this notebook, we load the classification model trained in the previous step and use it to overlay a heatmap of metastasis probability over a new slide.
+# MAGIC In the previous step, we re-trained a resnet model for our classification task and logged the model using ML flow. In this notebook, we load the classification model trained in the previous step and use it to overlay a heatmap of metastasis probability over a new slide.
 # MAGIC <br>
 # MAGIC <img src="https://hls-eng-data-public.s3.amazonaws.com/img/slide_heatmap.png" alt="logo" width=60% /> 
 # MAGIC </br>
 # MAGIC To do so, we use the our distributed segmentation approach to create patches from a given slide to be scored, and then use the pre-trained model to infer the probability of metastasis on each segment. We then visualize the results as a heatmap. 
-# MAGIC 
+# MAGIC
 # MAGIC Note that, you need to have `openSlide` installed on the cluster to be able to generate patches (use the same cluster you used for patch generation).
+
+# COMMAND ----------
+
+## use gpu cluster
+
+# COMMAND ----------
+
+# %pip install openslide-python
+# dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# !apt-get install -y openslide-tools
+# !apt install software-properties-common -y 
+# !add-apt-repository ppa:openslide/openslide -y 
+# !apt install python3-openslide -y 
+
+# !pip uninstall pyOpenSSL
+# !pip install --upgrade pyOpenSSL
+
+# !pip install --upgrade openslide-python
+# !pip install openslide-bin
+
+# dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -25,11 +49,13 @@ import json
 import os
 from pprint import pprint
 
-os.chdir("/databricks/driver")
-project_name='digital-pathology'
+project_name='digital-pathology' #original
+project_name2use = f"{project_name}".replace('-','_') ## for UC
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
-config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
+
 
 try:
   with open(config_path,'rb') as f:
@@ -37,6 +63,16 @@ try:
 except FileNotFoundError:
   print('please run ./config notebook and try again')
   assert False
+
+# COMMAND ----------
+
+BASE_PATH=settings['base_path']
+IMG_PATH = settings['img_path']
+ANNOTATION_PATH = BASE_PATH+"/annotations"
+
+# COMMAND ----------
+
+BASE_PATH
 
 # COMMAND ----------
 
@@ -62,16 +98,21 @@ import mlflow.pytorch
 IMG_PATH = settings['img_path']
 WSI_PATH = settings['data_path']
 mlflow.set_experiment(settings['experiment_name'])
-TEMP_PATCH_PATH="/ml/tmp/hls"
+# TEMP_PATCH_PATH="/ml/tmp/hls"
+TEMP_PATCH_PATH=f"{BASE_PATH}/tmp/hls"
 PATCH_SIZE=settings['patch_size']
 LEVEL=settings['level']
 dbutils.fs.mkdirs(TEMP_PATCH_PATH)
 
 # COMMAND ----------
 
-cuda = False
+cuda = True, #False
 use_cuda = cuda and torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
+
+# COMMAND ----------
+
+device
 
 # COMMAND ----------
 
@@ -134,6 +175,11 @@ display(df_patch_info)
 
 # COMMAND ----------
 
+# !chmod +x /Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/
+# from tensorflow.keras.applications.inception_v3 import InceptionV3
+
+# COMMAND ----------
+
 # MAGIC %run ./definitions
 
 # COMMAND ----------
@@ -160,6 +206,11 @@ dataset_df = (
 
 # COMMAND ----------
 
+# import openslide
+# print(openslide.__file__)
+
+# COMMAND ----------
+
 dataset_df.count()
 
 # COMMAND ----------
@@ -170,7 +221,7 @@ dataset_df.count()
 
 # COMMAND ----------
 
-cuda = False
+cuda = True #False
 use_cuda = cuda and torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
 
@@ -182,7 +233,7 @@ device = torch.device("cuda" if use_cuda else "cpu")
 # COMMAND ----------
 
 best_run_id=mlflow.search_runs([settings['experiment_id']]).sort_values(by='metrics.best_accuracy',ascending=False)['run_id'].iloc[0]
-model_name='resent-dp'
+model_name='resnet-dp'
 
 # COMMAND ----------
 

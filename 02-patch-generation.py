@@ -4,6 +4,16 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,cluster should have openslide-python installed
+# MAGIC %pip install openslide-python
+# MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# !apt-get install -y openslide-tools
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC # Distributed patch generation
 # MAGIC In this notebook we use spark's `pandas_udfs` to efficiently distribute patch generation process. Now that we have annotations and meta-data stored in delta, we can distribute patch generation using `pandas_udf`s in spark. 
@@ -19,10 +29,12 @@ import json
 import os
 from pprint import pprint
 
-project_name='digital-pathology'
+project_name='digital-pathology' #original
+project_name2use = f"{project_name}".replace('-','_') ## for UC
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
-config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
 
 try:
   with open(config_path,'rb') as f:
@@ -38,6 +50,15 @@ WSI_PATH=settings['data_path']
 BASE_PATH=settings['base_path']
 IMG_PATH = settings['img_path']
 ANNOTATION_PATH = BASE_PATH+"/annotations"
+# ANNOTATION_PATH = "/Volumes/mmt/digital-pathology/files/annotations"
+
+# COMMAND ----------
+
+IMG_PATH
+
+# COMMAND ----------
+
+ANNOTATION_PATH
 
 # COMMAND ----------
 
@@ -66,7 +87,10 @@ MAX_N_PATCHES=settings['max_n_patches'] # We set this value to limit the number 
 # DBTITLE 1,Load annotations
 from pyspark.sql.functions import *
 
-coordinates_df = spark.read.load(f'{ANNOTATION_PATH}/delta/patch_labels')
+# coordinates_df = spark.read.load(f'{ANNOTATION_PATH}/delta/patch_labels')
+# coordinates_df = spark.read.table('mmt.`digital-pathology`.patch_labels')
+
+coordinates_df = spark.read.table(f"mmt.{project_name2use}.patch_labels")
 
 df_patch_info = (
   spark.createDataFrame(dbutils.fs.ls(WSI_PATH))
@@ -98,7 +122,7 @@ df_patch_info.groupBy('train_test').avg('label').display()
 
 # MAGIC %md
 # MAGIC ## 2. Create patches from WSI images
-# MAGIC 
+# MAGIC
 # MAGIC In this step, we simply distribute the tiling process based on specified coordinates. This is achieved by applying `dist_patch_extract` defined in `PatchGenerator` class from the helper notebook, which leverages `pandas_udfs` to distribute patch extraction from openSlide
 
 # COMMAND ----------
@@ -111,6 +135,14 @@ patch_generator=PatchGenerator(wsi_path=WSI_PATH,level=LEVEL,patch_size=PATCH_SI
 
 # COMMAND ----------
 
+IMG_PATH
+
+# COMMAND ----------
+
+# dbutils.fs.rm('/ml/digital-pathology-54261', recurse=True)
+
+# COMMAND ----------
+
 # DBTITLE 1,Create a dataframe of processed patches
 dataset_df = (
   df_patch_info
@@ -118,6 +150,10 @@ dataset_df = (
   .withColumn('img_path',concat_ws('/',lit(IMG_PATH),col('train_test'),col('label')))
   .mapInPandas(patch_generator.dist_patch_save, schema='label:integer, x_center: integer, y_center: integer, processed_img:string')
 )
+
+# COMMAND ----------
+
+# display(dataset_df)
 
 # COMMAND ----------
 
