@@ -76,7 +76,6 @@ import pandas as pd
 
 # DBTITLE 1,Load extracted features from delta
 # img_features_df=spark.read.load(f"{BASE_PATH}/delta/features")
-# img_features_df=spark.read.table("mmt.`digital-pathology`.features")
 
 img_features_df=spark.read.table(f"mmt.{project_name2use}.features")
 

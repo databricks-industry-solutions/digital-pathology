@@ -39,14 +39,14 @@ nsc = NotebookSolutionCompanion()
 # COMMAND ----------
 
 job_json = {
-        "name": "[RUNNER] digital-pathology-TEST",
+        "name": "[RUNNER] digital-pathology-TEST", ## update where appropriate
         "timeout_seconds": 28800,
         "max_concurrent_runs": 1,
         "tags": {
             "usage": "solacc_testing",
             "group": "HLS",
             "do_not_delete" : True,
-            "removeAfter" : "2025-01-01" 
+            "removeAfter" : "2025-01-01" ## include as variable e.g. 30 days from today
         },
         "tasks": [
             {
@@ -204,7 +204,7 @@ job_json = {
             {
                 "job_cluster_key": "pathology_14-3-x_cpu_cluster",
                 "new_cluster": {
-                    # "spark_version": "12.2.x-cpu-ml-scala2.12",
+                    # "spark_version": "12.2.x-cpu-ml-scala2.12", ## original
                     "spark_version": "14.3.x-cpu-ml-scala2.12",
                     "num_workers": 2,
                     "node_type_id": {"AWS": "i3.xlarge", "MSA": "Standard_DS3_v2", "GCP": "n1-highmem-4"}
@@ -213,7 +213,7 @@ job_json = {
             {
                 "job_cluster_key": "pathology_14-3-x_cpu_cluster_w_init",
                 "new_cluster": {
-                    # "spark_version": "12.2.x-cpu-ml-scala2.12",
+                    # "spark_version": "12.2.x-cpu-ml-scala2.12", ## original
                     "spark_version": "14.3.x-cpu-ml-scala2.12",
                     "num_workers": 2,
                     "node_type_id": {"AWS": "i3.xlarge", "MSA": "Standard_DS3_v2", "GCP": "n1-highmem-4"},
@@ -229,7 +229,7 @@ job_json = {
             {
                 "job_cluster_key": "pathology_14-3-x_gpu_cluster_w_init",
                 "new_cluster": {
-                    # "spark_version": "12.2.x-gpu-ml-scala2.12",
+                    # "spark_version": "12.2.x-gpu-ml-scala2.12", ## original
                     "spark_version": "14.3.x-gpu-ml-scala2.12",
                     "num_workers": 2, #1,
                     "node_type_id": {"AWS": "g4dn.4xlarge", "MSA": "Standard_NC6s_v3", "GCP": "a2-highgpu-1g"},
@@ -250,10 +250,6 @@ job_json = {
 dbutils.widgets.dropdown("run_job", "False", ["True", "False"])
 run_job = dbutils.widgets.get("run_job") == "True"
 nsc.deploy_compute(job_json, run_job=run_job)
-
-# COMMAND ----------
-
-
 
 # COMMAND ----------
 

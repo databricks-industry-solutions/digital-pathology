@@ -299,3 +299,23 @@ df.sort_values(by='metrics.best_accuracy',ascending=False).display()
 # COMMAND ----------
 
 
+
+# COMMAND ----------
+
+## REGISTER BEST MODEL TO UC CATALOG
+# e.g.
+# https://e2-demo-field-eng.cloud.databricks.com/ml/experiments/3477183817943497/runs/c63c6dfc16ee4dff85b76aa72b522c72?o=1444828305810485
+
+# COMMAND ----------
+
+# %pip install "mlflow-skinny[databricks]>=2.4.1"
+# dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# import mlflow
+# catalog = "main"
+# schema = "default"
+# model_name = "my_model"
+# mlflow.set_registry_uri("databricks-uc")
+# mlflow.register_model("runs:/c63c6dfc16ee4dff85b76aa72b522c72/resnet-dp", f"{catalog}.{schema}.{model_name}")

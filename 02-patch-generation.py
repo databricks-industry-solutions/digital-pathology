@@ -5,8 +5,8 @@
 # COMMAND ----------
 
 # DBTITLE 1,cluster should have openslide-python installed
-# MAGIC %pip install openslide-python
-# MAGIC dbutils.library.restartPython()
+# %pip install openslide-python
+# dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -33,6 +33,7 @@ project_name='digital-pathology' #original
 project_name2use = f"{project_name}".replace('-','_') ## for UC
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
+
 # config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
 config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
 
@@ -50,7 +51,6 @@ WSI_PATH=settings['data_path']
 BASE_PATH=settings['base_path']
 IMG_PATH = settings['img_path']
 ANNOTATION_PATH = BASE_PATH+"/annotations"
-# ANNOTATION_PATH = "/Volumes/mmt/digital-pathology/files/annotations"
 
 # COMMAND ----------
 
@@ -65,7 +65,9 @@ ANNOTATION_PATH
 # DBTITLE 1,define parameters
 PATCH_SIZE=settings['patch_size']
 LEVEL=settings['level']
-MAX_N_PATCHES=settings['max_n_patches'] # We set this value to limit the number of patches generated. You can modify this to process more/less patches
+MAX_N_PATCHES=settings['max_n_patches'] 
+
+# We set this value to limit the number of patches generated. You can modify this to process more/less patches
 
 # COMMAND ----------
 
@@ -88,7 +90,6 @@ MAX_N_PATCHES=settings['max_n_patches'] # We set this value to limit the number 
 from pyspark.sql.functions import *
 
 # coordinates_df = spark.read.load(f'{ANNOTATION_PATH}/delta/patch_labels')
-# coordinates_df = spark.read.table('mmt.`digital-pathology`.patch_labels')
 
 coordinates_df = spark.read.table(f"mmt.{project_name2use}.patch_labels")
 
@@ -136,10 +137,6 @@ patch_generator=PatchGenerator(wsi_path=WSI_PATH,level=LEVEL,patch_size=PATCH_SI
 # COMMAND ----------
 
 IMG_PATH
-
-# COMMAND ----------
-
-# dbutils.fs.rm('/ml/digital-pathology-54261', recurse=True)
 
 # COMMAND ----------
 

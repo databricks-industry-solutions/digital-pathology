@@ -5,6 +5,7 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,reset UC catalog-schema
 # %sql
 # DROP SCHEMA IF EXISTS mmt.`digital-pathology` CASCADE;
 
@@ -15,15 +16,14 @@ dbutils.widgets.removeAll()
 
 # COMMAND ----------
 
+# DBTITLE 1,set nb parameters with widgets
 dbutils.widgets.text('project_name','digital-pathology')
-# dbutils.widgets.text('project_name','digital_pathology') ## better to avoid '-' #?
 dbutils.widgets.dropdown('overwrite_old_patches','no',['yes','no'])
 dbutils.widgets.text('max_n_patches','500')
 
 # COMMAND ----------
 
-# DBTITLE 0,add widgets
-import mlflow
+# DBTITLE 1,get parameter values from widgets
 project_name=dbutils.widgets.get('project_name')
 overwrite=dbutils.widgets.get('overwrite_old_patches')
 max_n_patches=int(dbutils.widgets.get('max_n_patches'))
@@ -32,12 +32,6 @@ max_n_patches=int(dbutils.widgets.get('max_n_patches'))
 
 # DBTITLE 1,specify path to raw data for each project
 project_data_paths = {'digital-pathology':"/databricks-datasets/med-images/camelyon16/",'omop-cdm-100K':"s3://hls-eng-data-public/data/rwe/all-states-90K/","omop-cdm-10K":"s3://hls-eng-data-public/data/synthea/",'psm':"s3://hls-eng-data-public/data/rwe/dbx-covid-sim/"}
-
-# COMMAND ----------
-
-# dbutils.fs.mkdirs("/Volumes/mmt/digital-pathology/files/test")
-# dbutils.fs.rm("/Volumes/mmt/digital-pathology/files/test", recurse=True)
-# dbutils.fs.rm('/mmt.digital-pathology', recurse=True)
 
 # COMMAND ----------
 
@@ -51,14 +45,13 @@ class SolAccUtil:
     user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
     catalog ='mmt'
     user_uid = abs(hash(user)) % (10 ** 5)
-    project_name2use = f"{project_name}".replace('-','_')
+    project_name2use = f"{project_name}".replace('-','_') ## better to use '_' for UC
 
     # if base_path!=None:
     #   base_path=base_path
     # else:
     #   base_path = os.path.join('/home',user,project_name)
-
-    # base_path = f"{catalog}.{project_name}" #f"/Volumes/{catalog}/{project_name}/files"
+    
     base_path = f"/Volumes/{catalog}/{project_name2use}/files"
       
     if data_path != None:
@@ -68,13 +61,12 @@ class SolAccUtil:
      
     dbutils.fs.mkdirs(base_path)
     # delta_path=os.path.join(base_path,project_name,'delta')
-    # delta_path= f"{catalog}.{project_name}.delta" #os.path.join(base_path.replace('files',''),'delta')
     delta_path= f"/Volumes/{catalog}/{project_name2use}/files/delta"
 
     experiment_name=os.path.join('/Users',user,project_name2use)
     # experiment_name = f"/Volumes/{catalog}/{project_name}/files"
 
-    
+    ## to-check wrt model registration to UC params to add? 
     if not mlflow.get_experiment_by_name(experiment_name):
       experiment_id = mlflow.create_experiment(experiment_name)
       experiment = mlflow.get_experiment(experiment_id)
@@ -85,6 +77,11 @@ class SolAccUtil:
     self.settings['max_n_patches']=max_n_patches
     # self.settings['img_path']=f'/ml/{project_name}-{user_uid}' 
     self.settings['img_path']=f'/Volumes/{catalog}/{project_name2use}/files/imgs' 
+
+    ## include these -- to update use in nbs 
+    self.settings['catalog']=catalog
+    self.settings['project_name2use']=project_name2use
+    self.settings['project_name']=project_name
 
     self.settings['base_path']=base_path
     self.settings['delta_path']=delta_path
@@ -137,14 +134,21 @@ class SolAccUtil:
       print('*'*100)
       display(files)
 
+    return self
+
 # COMMAND ----------
 
-project_name2use = f"{project_name}".replace('-','_')
-project_name2use
+# project_name2use = f"{project_name}".replace('-','_')
+# project_name2use
 
 # COMMAND ----------
 
 project_utils = SolAccUtil(project_name=project_name)
+
+
+# COMMAND ----------
+
+project_utils.settings['project_name2use'] 
 
 # COMMAND ----------
 
@@ -153,9 +157,10 @@ import json
 # with open(f"/dbfs/FileStore/{project_utils.settings['user_uid']}_{project_name}_configs.json",'w') as f:
 
 ## update to UC Volumes 
-with open(f"/Volumes/mmt/{project_name2use}/files/{project_utils.settings['user_uid']}_{project_name2use}_configs.json",'w') as f:
+with open(f"/Volumes/mmt/{project_utils.settings['project_name2use']}/files/{project_utils.settings['user_uid']}_{project_utils.settings['project_name2use'] }_configs.json",'w') as f:
   f.write(json.dumps(project_utils.settings,indent=4))
 f.close()
+
 
 # COMMAND ----------
 

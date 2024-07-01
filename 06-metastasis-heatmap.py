@@ -175,11 +175,6 @@ display(df_patch_info)
 
 # COMMAND ----------
 
-# !chmod +x /Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/
-# from tensorflow.keras.applications.inception_v3 import InceptionV3
-
-# COMMAND ----------
-
 # MAGIC %run ./definitions
 
 # COMMAND ----------

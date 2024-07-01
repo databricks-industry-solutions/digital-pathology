@@ -20,10 +20,6 @@
 
 # COMMAND ----------
 
-## to update these path to UC Volumes
-
-# COMMAND ----------
-
 # MAGIC %run ./config/0-config $project_name=digital-pathology $overwrite_old_patches=yes $max_n_patches=2000
 
 # COMMAND ----------
@@ -34,8 +30,10 @@ from pprint import pprint
 
 project_name='digital-pathology' #original
 project_name2use = f"{project_name}".replace('-','_') ## for UC
+
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
-user_uid = abs(hash(user)) % (10 ** 5)
+user_uid = abs(hash(user)) % (10 ** 5)  
+
 # config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
 config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
 
@@ -51,8 +49,14 @@ except FileNotFoundError:
 WSI_PATH=settings['data_path']
 BASE_PATH=settings['base_path']
 IMG_PATH = settings['img_path']
-ANNOTATION_PATH = BASE_PATH+"/annotations" ##
-# ANNOTATION_PATH = "/Volumes/mmt/digital-pathology/files/annotations"
+ANNOTATION_PATH = BASE_PATH+WSI_PATH=settings['data_path']
+
+# COMMAND ----------
+
+WSI_PATH = settings['data_path']
+BASE_PATH = settings['base_path']
+IMG_PATH = settings['img_path']
+ANNOTATION_PATH = BASE_PATH + WSI_PATH
 
 # COMMAND ----------
 
@@ -61,10 +65,6 @@ ANNOTATION_PATH
 # COMMAND ----------
 
 # DBTITLE 1,reset paths (for cleaner demo run)
-# dbutils.fs.rm("dbfs:/home/may.merkletan@databricks.com/digital-pathology/annotations", recurse=True)
-# dbutils.fs.rm("dbfs:/home/may.merkletan@databricks.com/digital-pathology", recurse=True)
-# dbutils.fs.rm("dbfs:/ml/digital-pathology-54261",recurse=True)
-
 dbutils.fs.rm(f'{ANNOTATION_PATH}/', recurse=True) ## would have to rerun 02_* notebooks
 # dbutils.fs.rm(f'{ANNOTATION_PATH}/delta/patch_labels/', recurse=True)
 
@@ -72,7 +72,7 @@ dbutils.fs.rm(f'{ANNOTATION_PATH}/', recurse=True) ## would have to rerun 02_* n
 
 for path in [BASE_PATH, ANNOTATION_PATH,f'{IMG_PATH}/train/1',f'{IMG_PATH}/test/1',f'{IMG_PATH}/train/0',f'{IMG_PATH}/test/0']:
   # if not os.path.exists((f'/dbfs/{path}')): 
-  if not os.path.exists((f'dbfs:/{path}')):
+  if not os.path.exists((f'dbfs:/{path}')): # to work with UC volumes
     print(f"path {path} does not exist")
     dbutils.fs.mkdirs(path)
     print(f"created path {path}")
@@ -166,13 +166,7 @@ display(dbutils.fs.ls(f'{ANNOTATION_PATH}/delta/patch_labels'))
 
 # COMMAND ----------
 
-# f"{BASE_PATH.removeprefix('/Volumes/').removesuffix('/files').replace('/','.').replace('digital-pathology','`digital-pathology`')}.patch_labels"
-
-# COMMAND ----------
-
 ## save as delta Table as well 
-# df_coords.write.format('delta').mode('overWrite').option("mergeSchema", "true").saveAsTable(f"{BASE_PATH.removeprefix('/Volumes/').removesuffix('/files').replace('/','.').replace('digital-pathology','`digital-pathology`')}.patch_labels")
-
 df_coords.write.format('delta').mode('overWrite').option("mergeSchema", "true").saveAsTable(f"{BASE_PATH.removeprefix('/Volumes/').removesuffix('/files').replace('/','.')}.patch_labels")
 
 # COMMAND ----------
