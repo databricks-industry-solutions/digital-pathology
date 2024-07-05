@@ -16,27 +16,15 @@
 
 # COMMAND ----------
 
-## use gpu cluster
-
-# COMMAND ----------
-
+# DBTITLE 1,[RUNME clusters config specifies cluster lib]
+## uncomment below to run this nb separately from RUNME nb
 # %pip install openslide-python
 # dbutils.library.restartPython()
 
 # COMMAND ----------
 
+# DBTITLE 1,cluster init file: openslide-tools.sh would install this
 # !apt-get install -y openslide-tools
-# !apt install software-properties-common -y 
-# !add-apt-repository ppa:openslide/openslide -y 
-# !apt install python3-openslide -y 
-
-# !pip uninstall pyOpenSSL
-# !pip install --upgrade pyOpenSSL
-
-# !pip install --upgrade openslide-python
-# !pip install openslide-bin
-
-# dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -69,10 +57,6 @@ except FileNotFoundError:
 BASE_PATH=settings['base_path']
 IMG_PATH = settings['img_path']
 ANNOTATION_PATH = BASE_PATH+"/annotations"
-
-# COMMAND ----------
-
-BASE_PATH
 
 # COMMAND ----------
 

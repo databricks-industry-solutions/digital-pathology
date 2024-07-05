@@ -34,6 +34,7 @@ project_name2use = f"{project_name}".replace('-','_') ## for UC
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)  
 
+# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
 config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
 
 try:
@@ -45,10 +46,18 @@ except FileNotFoundError:
 
 # COMMAND ----------
 
+project_utils.settings['project_name2use'] 
+
+# COMMAND ----------
+
 WSI_PATH = settings['data_path']
 BASE_PATH = settings['base_path']
 IMG_PATH = settings['img_path']
 ANNOTATION_PATH = BASE_PATH+"/annotations"
+
+# COMMAND ----------
+
+ANNOTATION_PATH
 
 # COMMAND ----------
 
@@ -60,6 +69,7 @@ dbutils.fs.rm(f'{ANNOTATION_PATH}/', recurse=True) # would have to rerun 02_* no
 # COMMAND ----------
 
 for path in [BASE_PATH, ANNOTATION_PATH,f'{IMG_PATH}/train/1',f'{IMG_PATH}/test/1',f'{IMG_PATH}/train/0',f'{IMG_PATH}/test/0']:
+  # if not os.path.exists((f'/dbfs/{path}')): 
   if not os.path.exists((f'dbfs:/{path}')): # to work with UC volumes
     print(f"path {path} does not exist")
     dbutils.fs.mkdirs(path)

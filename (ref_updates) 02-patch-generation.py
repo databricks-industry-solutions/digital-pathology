@@ -83,10 +83,8 @@ MAX_N_PATCHES=settings['max_n_patches']
 # DBTITLE 1,Load annotations
 from pyspark.sql.functions import *
 
-## read from UC Volumes
 # coordinates_df = spark.read.load(f'{ANNOTATION_PATH}/delta/patch_labels')
 
-## read from UC table
 coordinates_df = spark.read.table(f"mmt.{project_name2use}.patch_labels")
 
 df_patch_info = (

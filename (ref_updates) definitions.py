@@ -62,6 +62,7 @@ class PatchGenerator:
       return (image_as_string)
     
     else:
+      # processed_patch_path=f'/dbfs{img_path}/{patch_name}.jpg' ###
       processed_patch_path=f'{img_path}/{patch_name}.jpg' # Volumes path
       img.save(processed_patch_path)
       return(processed_patch_path)

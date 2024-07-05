@@ -186,7 +186,8 @@ job_json = {
                 "notebook_task": {
                     "notebook_path": "06-metastasis-heatmap",
                     "source": "WORKSPACE"
-                },                
+                },
+                # "job_cluster_key": "pathology_cluster_w_init",
                 "job_cluster_key": "pathology_14-3-x_gpu_cluster_w_init",
                 "libraries": [
                     {
@@ -203,6 +204,7 @@ job_json = {
             {
                 "job_cluster_key": "pathology_14-3-x_cpu_cluster",
                 "new_cluster": {
+                    # "spark_version": "12.2.x-cpu-ml-scala2.12", ## original
                     "spark_version": "14.3.x-cpu-ml-scala2.12",
                     "num_workers": 2,
                     "node_type_id": {"AWS": "i3.xlarge", "MSA": "Standard_DS3_v2", "GCP": "n1-highmem-4"}
@@ -211,6 +213,7 @@ job_json = {
             {
                 "job_cluster_key": "pathology_14-3-x_cpu_cluster_w_init",
                 "new_cluster": {
+                    # "spark_version": "12.2.x-cpu-ml-scala2.12", ## original
                     "spark_version": "14.3.x-cpu-ml-scala2.12",
                     "num_workers": 2,
                     "node_type_id": {"AWS": "i3.xlarge", "MSA": "Standard_DS3_v2", "GCP": "n1-highmem-4"},
@@ -226,6 +229,7 @@ job_json = {
             {
                 "job_cluster_key": "pathology_14-3-x_gpu_cluster_w_init",
                 "new_cluster": {
+                    # "spark_version": "12.2.x-gpu-ml-scala2.12", ## original
                     "spark_version": "14.3.x-gpu-ml-scala2.12",
                     "num_workers": 2, #1,
                     "node_type_id": {"AWS": "g4dn.4xlarge", "MSA": "Standard_NC6s_v3", "GCP": "a2-highgpu-1g"},

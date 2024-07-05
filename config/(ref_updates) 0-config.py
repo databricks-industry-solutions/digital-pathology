@@ -5,12 +5,6 @@
 
 # COMMAND ----------
 
-# dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
-
-#path of this config file: '/Users/{user}/{folder_name}/digital-pathology/config/0-config'
-
-# COMMAND ----------
-
 # DBTITLE 1,reset UC catalog-schema
 # %sql
 # DROP SCHEMA IF EXISTS mmt.`digital-pathology` CASCADE;
@@ -55,7 +49,8 @@ class SolAccUtil:
 
     if base_path!=None:
       base_path=base_path
-    else:      
+    else:
+      # base_path = os.path.join('/home',user,project_name)
       base_path = f"/Volumes/{catalog}/{project_name2use}/files"
       
     if data_path != None:
@@ -64,9 +59,11 @@ class SolAccUtil:
       data_path=project_data_paths[project_name] ## keep_same/original
      
     dbutils.fs.mkdirs(base_path)
+    # delta_path=os.path.join(base_path,project_name,'delta')
     delta_path= f"/Volumes/{catalog}/{project_name2use}/files/delta"
 
     experiment_name=os.path.join('/Users',user,project_name2use)
+    # experiment_name = f"/Volumes/{catalog}/{project_name}/files"
 
     ## to-check wrt model registration to UC params to add? 
     if not mlflow.get_experiment_by_name(experiment_name):
@@ -77,7 +74,7 @@ class SolAccUtil:
       
     self.settings = {}
     self.settings['max_n_patches']=max_n_patches
-    
+    # self.settings['img_path']=f'/ml/{project_name}-{user_uid}' 
     self.settings['img_path']=f'/Volumes/{catalog}/{project_name2use}/files/imgs' 
 
     ## include these -- to update use in nbs 
@@ -101,6 +98,7 @@ class SolAccUtil:
     import requests
     fname=url.split('/')[-1]
     r = requests.get(url)
+    # out_file=f'/dbfs{dest_path}/{fname}'
     out_file=f'{dest_path}/{fname}'
 
     print('-*-'*20)
@@ -111,6 +109,9 @@ class SolAccUtil:
       print(f'unpacking file {fname} into {dest_path}')
       import tarfile
     # open file
+      # file = tarfile.open(os.path.join('/dbfs',dest_path,fname))
+      # file.extractall(os.path.join('/dbfs',dest_path))
+
       file = tarfile.open(os.path.join('dbfs:',dest_path,fname))
       file.extractall(os.path.join('dbfs:',dest_path))
       file.close()
@@ -147,11 +148,13 @@ project_utils.settings['project_name2use']
 
 # DBTITLE 1,write configurations for later access
 import json 
+# with open(f"/dbfs/FileStore/{project_utils.settings['user_uid']}_{project_name}_configs.json",'w') as f:
 
 ## update to UC Volumes 
 with open(f"/Volumes/mmt/{project_utils.settings['project_name2use']}/files/{project_utils.settings['user_uid']}_{project_utils.settings['project_name2use'] }_configs.json",'w') as f:
   f.write(json.dumps(project_utils.settings,indent=4))
 f.close()
+
 
 # COMMAND ----------
 
@@ -162,6 +165,10 @@ project_utils.settings
 # DBTITLE 1,display project settings
 project_utils.print_info()
 print('use project_utils for access to settings')
+
+# COMMAND ----------
+
+project_utils.settings['img_path']
 
 # COMMAND ----------
 

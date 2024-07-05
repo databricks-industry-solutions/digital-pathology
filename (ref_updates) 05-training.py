@@ -47,6 +47,9 @@ import mlflow
 import mlflow.pytorch
 from mlflow.tracking import MlflowClient
 
+# import mlflow
+# plt.ion() # interactive mode
+
 # COMMAND ----------
 
 import json
@@ -57,7 +60,7 @@ project_name='digital-pathology' #original
 project_name2use = f"{project_name}".replace('-','_') ## for UC
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
-
+# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
 config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
 
 
@@ -247,7 +250,9 @@ model_ft = model_ft.to(device)
 criterion = nn.CrossEntropyLoss()
 
 # Observe that all parameters are being optimized
-optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.95) 
+optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.95)
+# optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.9)
+# optimizer_ft = optim.Adam(model_ft.parameters(), lr=0.001)
 
 # Decay LR by a factor of 0.1 every 7 epochs
 # exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
@@ -289,4 +294,20 @@ df.sort_values(by='metrics.best_accuracy',ascending=False).display()
 
 # COMMAND ----------
 
-## You can review and select to register model with best metric of interest to Unity Catalog 
+## REGISTER BEST MODEL TO UC CATALOG
+# e.g.
+# https://e2-demo-field-eng.cloud.databricks.com/ml/experiments/3477183817943497/runs/c63c6dfc16ee4dff85b76aa72b522c72?o=1444828305810485
+
+# COMMAND ----------
+
+# %pip install "mlflow-skinny[databricks]>=2.4.1"
+# dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# import mlflow
+# catalog = "main"
+# schema = "default"
+# model_name = "my_model"
+# mlflow.set_registry_uri("databricks-uc")
+# mlflow.register_model("runs:/c63c6dfc16ee4dff85b76aa72b522c72/resnet-dp", f"{catalog}.{schema}.{model_name}")
