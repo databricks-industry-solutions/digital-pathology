@@ -49,7 +49,7 @@ import hashlib
 class SolAccUtil:
   def __init__(self,project_name,max_n_patches=max_n_patches,patch_size=299,level=0,data_path=None,base_path=None):
     user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
-    catalog ='mmt'
+    catalog ='mmt' 
     user_uid = abs(hash(user)) % (10 ** 5)
     project_name2use = f"{project_name}".replace('-','_') ## better to use '_' for UC
 
