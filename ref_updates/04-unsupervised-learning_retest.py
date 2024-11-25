@@ -18,26 +18,50 @@
 
 # COMMAND ----------
 
-# # %pip install umap-learn umap-learn[plot] xarray
-# # %pip install pandas matplotlib datashader bokeh holoviews scikit-image colorcet 
+# %pip install umap-learn umap-learn[plot] xarray
+# %pip install pandas matplotlib datashader bokeh holoviews scikit-image colorcet 
 
 # %pip install --upgrade pip
 
-# # Install umap-learn and related packages
-# %pip install umap-learn>=0.5.6 umap-learn[plot]>=0.5.6
+# Install xarray and other dependencies
+# %pip install --force-reinstall -v "numpy==1.25.2"
 
-# # Install xarray and other dependencies
 # %pip install xarray==2023.12.0 scikit-learn>=0.22.0 importlib-metadata scipy>=1.4.1 pyspark>=3.1.2 numpy>=1.23.5 scipy>=1.4.1 --upgrade
+# %pip install xarray==2023.12.0 scikit-learn>=0.22.0 importlib-metadata scipy>=1.4.1 pyspark>=3.1.2 scipy>=1.4.1 --upgrade
+
+# Install umap-learn and related packages
+# %pip install umap-learn>=0.5.6 umap-learn[plot]>=0.5.6
 
 # # Install dask
 # %pip install "dask[dataframe]" --upgrade 
-
 # dbutils.library.restartPython()
 
 # COMMAND ----------
 
 # MAGIC %pip install umap-learn umap-learn[plot] xarray
 # MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+import pkg_resources
+from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, StringType
+
+# Get the list of installed packages
+installed_packages = pkg_resources.working_set
+packages_list = sorted(["%s==%s" % (i.key, i.version) for i in installed_packages])
+
+# Define the schema
+schema = StructType([StructField("package", StringType(), True)])
+
+# Create a Spark session
+spark = SparkSession.builder.getOrCreate()
+
+# Create DataFrame with the defined schema
+df = spark.createDataFrame([(pkg,) for pkg in packages_list], schema)
+
+# Display the DataFrame
+display(df)
 
 # COMMAND ----------
 

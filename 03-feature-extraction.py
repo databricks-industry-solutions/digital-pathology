@@ -82,6 +82,10 @@ display(annotation_df)
 
 # COMMAND ----------
 
+IMG_PATH
+
+# COMMAND ----------
+
 # DBTITLE 1,Create a dataframe of images
 patch_df= (
   spark.read.format('binaryFile').load(f'{IMG_PATH}/*/*/*.jpg').repartition(32)

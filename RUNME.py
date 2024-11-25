@@ -249,4 +249,7 @@ nsc.deploy_compute(job_json, run_job=run_job)
 
 # COMMAND ----------
 
-
+# "custom_tags": {
+#         "removeAfter": "2026-01-31",
+#         "FE_poc_dev_cluster": "True"
+#     }

@@ -190,7 +190,7 @@ dataset_df = (
 
 # COMMAND ----------
 
-dataset_df.count()
+# dataset_df.count()
 
 # COMMAND ----------
 
@@ -257,7 +257,7 @@ images=spark.read.format('binaryFile').load(TEMP_PATCH_PATH).repartition(64)
 
 # COMMAND ----------
 
-images.count()
+# images.count()
 
 # COMMAND ----------
 

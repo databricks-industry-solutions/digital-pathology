@@ -66,7 +66,7 @@ class SolAccUtil:
     dbutils.fs.mkdirs(base_path)
     delta_path= f"/Volumes/{catalog}/{project_name2use}/files/delta"
 
-    experiment_name=os.path.join('/Users',user,project_name2use)
+    experiment_name=os.path.join('/Users',user,project_name2use) ## update if needed
 
     ## to-check wrt model registration to UC params to add? 
     if not mlflow.get_experiment_by_name(experiment_name):

@@ -124,15 +124,23 @@ df_coords_tumor = spark.read.csv(f'{ANNOTATION_PATH}/tumor_train.txt',schema=sch
 
 # union patches together
 df_coords = df_coords_normal.union(df_coords_tumor).selectExpr('lower(sid) as sid','x_center','y_center','label')
-display(df_coords)
+# display(df_coords)
 
 # COMMAND ----------
 
-df_coords.count()
+display(df_coords.sample(fraction=0.005, seed=482, withReplacement=False))
 
 # COMMAND ----------
 
-df_coords.groupby('label').count().show()
+display(df_coords_normal)
+
+# COMMAND ----------
+
+display(df_coords_tumor)
+
+# COMMAND ----------
+
+display(df_coords. groupby('label').count())
 
 # COMMAND ----------
 
