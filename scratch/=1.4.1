@@ -1,0 +1,55 @@
+Collecting xarray==2023.12.0
+  Using cached xarray-2023.12.0-py3-none-any.whl.metadata (11 kB)
+Requirement already satisfied: scikit-learn in /databricks/python3/lib/python3.10/site-packages (1.1.1)
+Collecting scikit-learn
+  Using cached scikit_learn-1.5.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (13 kB)
+Requirement already satisfied: importlib-metadata in /databricks/python3/lib/python3.10/site-packages (4.11.3)
+Collecting importlib-metadata
+  Using cached importlib_metadata-8.5.0-py3-none-any.whl.metadata (4.8 kB)
+Requirement already satisfied: scipy in /databricks/python3/lib/python3.10/site-packages (1.10.0)
+Collecting scipy
+  Using cached scipy-1.14.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (60 kB)
+Collecting pyspark
+  Using cached pyspark-3.5.3-py2.py3-none-any.whl
+Requirement already satisfied: numpy>=1.22 in /local_disk0/.ephemeral_nfs/envs/pythonEnv-541b9720-06e3-476b-b43f-52c7c8f1e720/lib/python3.10/site-packages (from xarray==2023.12.0) (1.25.2)
+Requirement already satisfied: packaging>=21.3 in /databricks/python3/lib/python3.10/site-packages (from xarray==2023.12.0) (23.2)
+Requirement already satisfied: pandas>=1.4 in /databricks/python3/lib/python3.10/site-packages (from xarray==2023.12.0) (1.5.3)
+Requirement already satisfied: joblib>=1.2.0 in /databricks/python3/lib/python3.10/site-packages (from scikit-learn) (1.2.0)
+Collecting threadpoolctl>=3.1.0 (from scikit-learn)
+  Using cached threadpoolctl-3.5.0-py3-none-any.whl.metadata (13 kB)
+Collecting zipp>=3.20 (from importlib-metadata)
+  Using cached zipp-3.21.0-py3-none-any.whl.metadata (3.7 kB)
+Collecting py4j==0.10.9.7 (from pyspark)
+  Using cached py4j-0.10.9.7-py2.py3-none-any.whl.metadata (1.5 kB)
+Requirement already satisfied: python-dateutil>=2.8.1 in /databricks/python3/lib/python3.10/site-packages (from pandas>=1.4->xarray==2023.12.0) (2.8.2)
+Requirement already satisfied: pytz>=2020.1 in /databricks/python3/lib/python3.10/site-packages (from pandas>=1.4->xarray==2023.12.0) (2022.7)
+Requirement already satisfied: six>=1.5 in /usr/lib/python3/dist-packages (from python-dateutil>=2.8.1->pandas>=1.4->xarray==2023.12.0) (1.16.0)
+Using cached xarray-2023.12.0-py3-none-any.whl (1.1 MB)
+Using cached scikit_learn-1.5.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.3 MB)
+Using cached importlib_metadata-8.5.0-py3-none-any.whl (26 kB)
+Using cached scipy-1.14.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (41.2 MB)
+Using cached py4j-0.10.9.7-py2.py3-none-any.whl (200 kB)
+Using cached threadpoolctl-3.5.0-py3-none-any.whl (18 kB)
+Using cached zipp-3.21.0-py3-none-any.whl (9.6 kB)
+Installing collected packages: py4j, zipp, threadpoolctl, scipy, pyspark, scikit-learn, importlib-metadata, xarray
+  Attempting uninstall: zipp
+    Found existing installation: zipp 3.11.0
+    Not uninstalling zipp at /databricks/python3/lib/python3.10/site-packages, outside environment /local_disk0/.ephemeral_nfs/envs/pythonEnv-541b9720-06e3-476b-b43f-52c7c8f1e720
+    Can't uninstall 'zipp'. No files were found to uninstall.
+  Attempting uninstall: threadpoolctl
+    Found existing installation: threadpoolctl 2.2.0
+    Not uninstalling threadpoolctl at /databricks/python3/lib/python3.10/site-packages, outside environment /local_disk0/.ephemeral_nfs/envs/pythonEnv-541b9720-06e3-476b-b43f-52c7c8f1e720
+    Can't uninstall 'threadpoolctl'. No files were found to uninstall.
+  Attempting uninstall: scipy
+    Found existing installation: scipy 1.10.0
+    Not uninstalling scipy at /databricks/python3/lib/python3.10/site-packages, outside environment /local_disk0/.ephemeral_nfs/envs/pythonEnv-541b9720-06e3-476b-b43f-52c7c8f1e720
+    Can't uninstall 'scipy'. No files were found to uninstall.
+  Attempting uninstall: scikit-learn
+    Found existing installation: scikit-learn 1.1.1
+    Not uninstalling scikit-learn at /databricks/python3/lib/python3.10/site-packages, outside environment /local_disk0/.ephemeral_nfs/envs/pythonEnv-541b9720-06e3-476b-b43f-52c7c8f1e720
+    Can't uninstall 'scikit-learn'. No files were found to uninstall.
+  Attempting uninstall: importlib-metadata
+    Found existing installation: importlib-metadata 4.11.3
+    Not uninstalling importlib-metadata at /databricks/python3/lib/python3.10/site-packages, outside environment /local_disk0/.ephemeral_nfs/envs/pythonEnv-541b9720-06e3-476b-b43f-52c7c8f1e720
+    Can't uninstall 'importlib-metadata'. No files were found to uninstall.
+Successfully installed importlib-metadata-8.5.0 py4j-0.10.9.7 pyspark-3.5.3 scikit-learn-1.5.2 scipy-1.14.1 threadpoolctl-3.5.0 xarray-2023.12.0 zipp-3.21.0
