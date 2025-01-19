@@ -65,15 +65,17 @@
 
 # MAGIC %md
 # MAGIC ## Workflow Orchestration
-# MAGIC We have included a [RUNME]($./RUNME) notebook within this package. To run the end-to-end workflow, simply run this notebook (by attaching it to any running cluster). By running the notebook you create a [databricks workflow runner](https://docs.databricks.com/workflows/index.html) (`digital-pathology`) that runs all the steps in this package, inclduing setting up clusters for each part of your experiment. 
+# MAGIC We have included **a [RUNME]($./RUNME) notebook** within this package. To **run the end-to-end workflow**, simply run this notebook (by attaching it to any running `Classic Compute` cluster). By running the notebook you create a [databricks workflow runner](https://docs.databricks.com/workflows/index.html) (`digital-pathology`) that runs all the steps in this package, inclduing setting up clusters for each part of your experiment. 
 # MAGIC
 # MAGIC ## Cluster Setup
-# MAGIC This workflow depends on the [openSlide](https://openslide.org/)package which is a C library. Fortunatley databricks open standards makes it seemless to install third party pckages in your cluster. To do so, we first create an `Init Script` to install `openslide-tools` from [OpenSlide library](https://openslide.org/) on your cluster.
-# MAGIC Note that all this work is automatically done within the RUNME notebook and you do not need to manually do install anything. After running the notebook, you'll notice that there are three clsuters available to you:
-# MAGIC 1. 
+# MAGIC This workflow depends on the [openSlide](https://openslide.org/)package which is a `C` library. Fortunatley databricks open standards makes it seemless to install third party pckages in your cluster. 
+# MAGIC <!-- -- we recommend using at least a ML-DBR-14.3LTS with GPU (see `./config/0-config`).     -->
+# MAGIC To do so, we first create an `Init Script` to install `openslide-tools` from [OpenSlide library](https://openslide.org/) on your cluster.
+# MAGIC Note that all this work is automatically done within the RUNME notebook and you do not need to manually do install anything. After running the notebook, you'll notice that there are three clusters available to you.
 
 # COMMAND ----------
 
+# DBTITLE 1,Overview Slides
 slides_html="""
 <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vQkRfYrJsS_2s73lc9Z5Pz15E6r8FhnRVaeWc49VjW1NfHmoGzxoE1GfyJDY4b7dfu7BMQ99X6nlLzp/embed?start=true&loop=true&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
 """
@@ -81,23 +83,25 @@ displayHTML(slides_html)
 
 # COMMAND ----------
 
-# MAGIC %pip install openslide-python
-# MAGIC dbutils.library.restartPython()
+# MAGIC %md
+# MAGIC [Alternatively, we recommend using a cluster with at least a ML-DBR-14.3LTS with GPU (see `./config/0-config`) and link the `openslide-tools.sh` file from workspace folder as init scripts within the Advanced Options]
 
 # COMMAND ----------
 
-!apt-get install -y openslide-tools
+# DBTITLE 1,Install openslide-python
+# %pip install openslide-python
+# dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC After creating the cluster, attach this notebook and run this command for a quick look at the slides and test if the libraries are installed.
 
 # COMMAND ----------
 
 # DBTITLE 1,WSI dataset
 WSI_PATH='/databricks-datasets/med-images/camelyon16/'
 display(dbutils.fs.ls(WSI_PATH))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC after creating the cluster, attach this notebook and run this command for a quick look at the slides and test if the libraries are installed.
 
 # COMMAND ----------
 

@@ -11,13 +11,17 @@
 
 # COMMAND ----------
 
-## if using GPU -- you can check available CUDA
-# !nvidia-smi
+## if using GPU -- you can check available CUDA | otherwise code in this cell should be commented.
+!nvidia-smi
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## 0. Initial Config
+
+# COMMAND ----------
+
+# MAGIC %run ./config/0-config $project_name=digital_pathology $overwrite_old_patches=no $max_n_patches=2000
 
 # COMMAND ----------
 
@@ -53,12 +57,16 @@ import json
 import os
 from pprint import pprint
 
-project_name='digital-pathology' #original
-project_name2use = f"{project_name}".replace('-','_') ## for UC
+catalog_name="dbdemos"
+project_name='digital_pathology' #
+# project_name2use = f"{project_name}".replace('-','_') ## for UC
+
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
 
-config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
+# config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
+
+config_path=f"/Volumes/{catalog_name}/{project_name}/files/{user_uid}_{project_name}_configs.json"
 
 
 try:

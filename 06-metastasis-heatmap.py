@@ -37,13 +37,15 @@ import json
 import os
 from pprint import pprint
 
-project_name='digital-pathology' #original
+catalog_name= "dbdemos"
+project_name='digital_pathology' #original
 project_name2use = f"{project_name}".replace('-','_') ## for UC
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
-# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
-config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
 
+# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+# config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
+config_path=f"/Volumes/{catalog_name}/{project_name}/files/{user_uid}_{project_name}_configs.json"
 
 try:
   with open(config_path,'rb') as f:
@@ -185,12 +187,13 @@ dataset_df = (
 
 # COMMAND ----------
 
-# import openslide
-# print(openslide.__file__)
+# dataset_df.count()
+# 10000
 
 # COMMAND ----------
 
-# dataset_df.count()
+import openslide
+print(openslide.__file__)
 
 # COMMAND ----------
 
@@ -358,7 +361,3 @@ fig.colorbar(c, ax=ax)
 fig.set_figheight(12)
 fig.set_figwidth(12)
 plt.show()
-
-# COMMAND ----------
-
-

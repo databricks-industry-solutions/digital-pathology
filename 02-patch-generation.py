@@ -27,17 +27,23 @@
 
 # COMMAND ----------
 
+# %run ./config/0-config $project_name=digital_pathology $overwrite_old_patches=yes $max_n_patches=2000
+
+# COMMAND ----------
+
 import json
 import os
 from pprint import pprint
 
-project_name='digital-pathology' #original
-project_name2use = f"{project_name}".replace('-','_') #for UC
+catalog_name = 'dbdemos'
+project_name='digital_pathology' 
+# project_name2use = f"{project_name}".replace('-','_') #for UC
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
 
 # config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
-config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
+# config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
+config_path=f"/Volumes/{catalog_name}/{project_name}/files/{user_uid}_{project_name}_configs.json"
 
 try:
   with open(config_path,'rb') as f:
@@ -87,7 +93,8 @@ from pyspark.sql.functions import *
 # coordinates_df = spark.read.load(f'{ANNOTATION_PATH}/delta/patch_labels')
 
 ## read from UC table
-coordinates_df = spark.read.table(f"mmt.{project_name2use}.patch_labels")
+# coordinates_df = spark.read.table(f"mmt.{project_name2use}.patch_labels")
+coordinates_df = spark.read.table(f"{catalog_name}.{project_name}.patch_labels")
 
 df_patch_info = (
   spark.createDataFrame(dbutils.fs.ls(WSI_PATH))
@@ -128,6 +135,10 @@ spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", "1024")
 
 # COMMAND ----------
 
+PatchGenerator.__doc__, IMG_PATH
+
+# COMMAND ----------
+
 patch_generator=PatchGenerator(wsi_path=WSI_PATH,level=LEVEL,patch_size=PATCH_SIZE, img_path=IMG_PATH)
 
 # COMMAND ----------
@@ -142,12 +153,13 @@ dataset_df = (
 
 # COMMAND ----------
 
-df_patch_info.repartition(64).withColumn('img_path',concat_ws('/',lit(IMG_PATH),col('train_test'),col('label'))).display()
+# MAGIC %md
+# MAGIC Note that in the above command we simply created the spark execution plan and no action has been invoked yet. The following command will invoke and action which is to create a dataframe of extracted patches.  
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC Note that in the above command we simply created the spark execution plan and no action has been invoked yet. The following command will invoke and action which is to create a dataframe of extracted patches.  
+# DBTITLE 1,calls the execution of mapinpandas
+# display(dataset_df)
 
 # COMMAND ----------
 
@@ -157,9 +169,9 @@ dataset_df.count()
 
 # COMMAND ----------
 
-# DBTITLE 1,display the images using the path info
-spark.read.format('binaryFile').load(f'{IMG_PATH}/*/*/*.jpg').withColumn('sid',regexp_extract('path','(\\w+)_(\\d+)', 0)).display()
+df_patch_info.repartition(64).withColumn('img_path',concat_ws('/',lit(IMG_PATH),col('train_test'),col('label'))).display()
 
 # COMMAND ----------
 
-
+# DBTITLE 1,display the images using the path info
+spark.read.format('binaryFile').load(f'{IMG_PATH}/*/*/*.jpg').withColumn('sid',regexp_extract('path','(\\w+)_(\\d+)', 0)).display()

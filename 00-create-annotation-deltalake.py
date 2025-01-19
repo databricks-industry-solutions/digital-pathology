@@ -9,7 +9,7 @@
 # MAGIC In this section we load pre-processed annotation files - tabular data containing slide name, `x`,`y` coordinates of the tile and corresponding label (`0` for no metastasis and `1` for metastasis).
 # MAGIC We use pre-processed annotations from [BaiduResearch](https://github.com/baidu-research/NCRF). This repository, contains the coordinates of pre-sampled patches used in [the paper](https://openreview.net/forum?id=S1aY66iiM) which uses conditional random fields in conjunction with CNNs to achieve the highest accuracy for detecting metastasis on WSI images:
 # MAGIC
-# MAGIC Each one is a csv file, where each line within the file is in the format like Tumor_024,25417,127565 that the last two numbers are (x, y) coordinates of the center of each patch at level 0. tumor_train.txt and normal_train.txt contains 200,000 coordinates respectively, and tumor_valid.txt and normal_valid.txt contains 20,000 coordinates respectively. Note that, coordinates of hard negative patches, typically around tissue boundary regions, are also included within normal_train.txt and normal_valid.txt. With the original WSI and pre-sampled coordinates, we can now generate image patches for training deep CNN models.
+# MAGIC Each one is a csv file, where each line within the file is in the format like Tumor_024,25417,127565 that the last two numbers are (x, y) coordinates of the center of each patch at level 0. `tumor_train.txt` and `normal_train.txt` contains 200,000 coordinates respectively, and `tumor_valid.txt` and `normal_valid.txt` contains 20,000 coordinates respectively. Note that, coordinates of hard negative patches, typically around tissue boundary regions, are also included within `normal_train.txt` and `normal_valid.txt`. With the original WSI and pre-sampled coordinates, we can now generate image patches for training deep CNN models.
 # MAGIC
 # MAGIC [see here](https://github.com/baidu-research/NCRF#patch-images) for more information.
 
@@ -20,7 +20,18 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./config/0-config $project_name=digital-pathology $overwrite_old_patches=yes $max_n_patches=2000
+# MAGIC %md
+# MAGIC Before proceeding, it is worth reviewing the `./config/0-config` file to check that the catalog, schema (project_name), and volume paths are set up as desired with a corresponding cluster. 
+
+# COMMAND ----------
+
+# DBTITLE 1,Run 0-config file to set configs
+# MAGIC %run ./config/0-config $project_name=digital_pathology $overwrite_old_patches=yes $max_n_patches=2000
+
+# COMMAND ----------
+
+# DBTITLE 1,Check parameters extracted from 0-config.
+catalog_name, project_name
 
 # COMMAND ----------
 
@@ -28,13 +39,18 @@ import json
 import os
 from pprint import pprint
 
-project_name='digital-pathology' #original
-project_name2use = f"{project_name}".replace('-','_') ## for UC
+# project_name='digital-pathology' #original
+# project_name='digital_pathology' #updated with `_`
+# project_name2use = f"{project_name}".replace('-','_') ## for UC
+
+catalog_name = 'dbdemos'
+project_name='digital_pathology' 
 
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)  
 
-config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
+# config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
+config_path=f"/Volumes/{catalog_name}/{project_name}/files/{user_uid}_{project_name}_configs.json"
 
 try:
   with open(config_path,'rb') as f:
@@ -52,6 +68,23 @@ ANNOTATION_PATH = BASE_PATH+"/annotations"
 
 # COMMAND ----------
 
+# DBTITLE 1,Copy init.sh file to UC Vol BASE_PATH
+import os
+import subprocess
+
+# Define the source and destination paths
+source_path = "openslide-tools.sh"
+destination_path = f"{BASE_PATH}/openslide-tools.sh" #'/Volumes/dbdemos/digital_pathology/files/openslide-tools.sh'
+
+# Ensure the destination directory exists
+os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+
+# Use subprocess to copy the file
+subprocess.run(["cp", source_path, destination_path], check=True)
+subprocess.run(["cat", destination_path], check=True)
+
+# COMMAND ----------
+
 # DBTITLE 1,reset paths (for cleaner demo run)
 dbutils.fs.rm(f'{ANNOTATION_PATH}/', recurse=True) # would have to rerun 02_* notebooks
 
@@ -59,6 +92,7 @@ dbutils.fs.rm(f'{ANNOTATION_PATH}/', recurse=True) # would have to rerun 02_* no
 
 # COMMAND ----------
 
+# DBTITLE 1,Check & Create UC Volumes paths for image files
 for path in [BASE_PATH, ANNOTATION_PATH,f'{IMG_PATH}/train/1',f'{IMG_PATH}/test/1',f'{IMG_PATH}/train/0',f'{IMG_PATH}/test/0']:
   if not os.path.exists((f'dbfs:/{path}')): # to work with UC volumes
     print(f"path {path} does not exist")
@@ -72,6 +106,7 @@ displayHTML(html_str)
 
 # COMMAND ----------
 
+# DBTITLE 1,Review UC Volumes BASE_PATH
 display(dbutils.fs.ls(BASE_PATH))
 
 # COMMAND ----------
@@ -81,6 +116,7 @@ display(dbutils.fs.ls(BASE_PATH))
 
 # COMMAND ----------
 
+# DBTITLE 1,Load and write data to ANNOTATION PATH
 SolAccUtil(project_name).load_remote_data('https://raw.githubusercontent.com/baidu-research/NCRF/master/coords/tumor_train.txt',ANNOTATION_PATH)
 SolAccUtil(project_name).load_remote_data('https://raw.githubusercontent.com/baidu-research/NCRF/master/coords/normal_train.txt',ANNOTATION_PATH)
 display(dbutils.fs.ls(ANNOTATION_PATH))
@@ -92,6 +128,7 @@ display(dbutils.fs.ls(ANNOTATION_PATH))
 
 # COMMAND ----------
 
+# DBTITLE 1,Check file content
 print(dbutils.fs.head(f'{ANNOTATION_PATH}/tumor_train.txt'))
 
 # COMMAND ----------
@@ -102,16 +139,20 @@ print(dbutils.fs.head(f'{ANNOTATION_PATH}/tumor_train.txt'))
 
 # COMMAND ----------
 
-import pyspark.sql.functions as F
-from pyspark.sql.types import StructType, StringType, IntegerType
+# DBTITLE 1,Import pyspark.sql functions and types
+# import pyspark.sql.functions as F
+# from pyspark.sql.types import StructType, StringType, IntegerType
+
+from pyspark.sql import functions as F, types as T
 
 # COMMAND ----------
 
+# DBTITLE 1,Set Schema
 schema = (
-  StructType()
-  .add("sid",StringType(),False)
-  .add('x_center',IntegerType(),True)
-  .add('y_center',IntegerType(),True)
+  T.StructType()
+  .add("sid",T.StringType(),False)
+  .add('x_center',T.IntegerType(),True)
+  .add('y_center',T.IntegerType(),True)
 )
 
 # COMMAND ----------
@@ -128,18 +169,12 @@ df_coords = df_coords_normal.union(df_coords_tumor).selectExpr('lower(sid) as si
 
 # COMMAND ----------
 
+# DBTITLE 1,Check sample image coordinates
 display(df_coords.sample(fraction=0.005, seed=482, withReplacement=False))
 
 # COMMAND ----------
 
-display(df_coords_normal)
-
-# COMMAND ----------
-
-display(df_coords_tumor)
-
-# COMMAND ----------
-
+# DBTITLE 1,Check data counts by label
 display(df_coords. groupby('label').count())
 
 # COMMAND ----------
@@ -150,18 +185,22 @@ display(df_coords. groupby('label').count())
 
 # COMMAND ----------
 
+# DBTITLE 1,Write as delta files to ANNOTATION_PATH
 df_coords.write.format('delta').mode('overWrite').save(f'{ANNOTATION_PATH}/delta/patch_labels')
 
 # COMMAND ----------
 
+# DBTITLE 1,Optimize delta files
 sql(f'OPTIMIZE delta.`{ANNOTATION_PATH}/delta/patch_labels`')
 
 # COMMAND ----------
 
+# DBTITLE 1,check patch_labels dataset
 display(dbutils.fs.ls(f'{ANNOTATION_PATH}/delta/patch_labels'))
 
 # COMMAND ----------
 
+# DBTITLE 1,Write data also as delta table to Catalog.Schema
 ## save as delta Table as well 
 df_coords.write.format('delta').mode('overWrite').option("mergeSchema", "true").saveAsTable(f"{BASE_PATH.removeprefix('/Volumes/').removesuffix('/files').replace('/','.')}.patch_labels")
 

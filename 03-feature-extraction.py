@@ -28,6 +28,10 @@
 
 # COMMAND ----------
 
+# %run ./config/0-config $project_name=digital_pathology $overwrite_old_patches=no $max_n_patches=2000
+
+# COMMAND ----------
+
 spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", "1024")
 
 # COMMAND ----------
@@ -36,13 +40,15 @@ import json
 import os
 from pprint import pprint
 
-project_name='digital-pathology' #original
+catalog_name = 'dbdemos'
+project_name='digital_pathology' #updated
 project_name2use = f"{project_name}".replace('-','_') ## for UC
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
-# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
-config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
 
+# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+# config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
+config_path=f"/Volumes/{catalog_name}/{project_name}/files/{user_uid}_{project_name}_configs.json"
 
 try:
   with open(config_path,'rb') as f:
