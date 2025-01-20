@@ -68,10 +68,12 @@
 # MAGIC We have included **a [RUNME]($./RUNME) notebook** within this package. To **run the end-to-end workflow**, simply run this notebook (by attaching it to any running `Classic Compute` cluster). By running the notebook you create a [databricks workflow runner](https://docs.databricks.com/workflows/index.html) (`digital-pathology`) that runs all the steps in this package, inclduing setting up clusters for each part of your experiment. 
 # MAGIC
 # MAGIC ## Cluster Setup
-# MAGIC This workflow depends on the [openSlide](https://openslide.org/)package which is a `C` library. Fortunatley databricks open standards makes it seemless to install third party pckages in your cluster. 
+# MAGIC This workflow depends on the [openSlide](https://openslide.org/) package which is a `C` library. Fortunatley databricks open standards makes it seemless to install third party pckages in your cluster. 
 # MAGIC <!-- -- we recommend using at least a ML-DBR-14.3LTS with GPU (see `./config/0-config`).     -->
-# MAGIC To do so, we first create an `Init Script` to install `openslide-tools` from [OpenSlide library](https://openslide.org/) on your cluster.
-# MAGIC Note that all this work is automatically done within the RUNME notebook and you do not need to manually do install anything. After running the notebook, you'll notice that there are three clusters available to you.
+# MAGIC To do so, we first create an `Init Script` to install `openslide-tools` from [OpenSlide library](https://openslide.org/) on your cluster.   
+# MAGIC
+# MAGIC <!-- Note that all this work is automatically done within the RUNME notebook and you do not need to manually do install anything.--> 
+# MAGIC After running the notebook, you'll notice that there are three clusters available to you. You are asked to check in the cluster configurations to make sure that the Workspace path to `openslide-tools.sh` is included in the Init Scripts tab within the Advanced Options for clusters that require them e.g. those clusters with the `_w_init` subscript in cluster name.  
 
 # COMMAND ----------
 
@@ -84,18 +86,19 @@ displayHTML(slides_html)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC [Alternatively, we recommend using a cluster with at least a ML-DBR-14.3LTS (see `./config/0-config`) and link the `openslide-tools.sh` file from workspace folder as init scripts within the Advanced Options _OR_ run the `RUNME` notebook to setup the clusters and ink the `openslide-tools.sh` file from workspace folder as init scripts within the Advanced Options per RUNME guidance] 
+# MAGIC [Alternatively, we recommend using a cluster with at least a ML-DBR-14.3LTS (see `./config/0-config`) and include the `openslide-tools.sh` file path from workspace folder as init scripts path within the Advanced Options _OR_ run the [`RUNME`]($./RUNME) notebook to setup the clusters and ink the `openslide-tools.sh` file from workspace folder as init scripts within the Advanced Options per RUNME guidance] 
 
 # COMMAND ----------
 
 # DBTITLE 1,[RUNME clusters config specifies cluster lib]
-## uncomment below to run this nb separately from RUNME nb
+## uncomment below to run this nb separately from RUNME nb if openslide-python hasn't been installed
 # %pip install openslide-python
 # dbutils.library.restartPython()
 
 # COMMAND ----------
 
 # DBTITLE 1,cluster init file: openslide-tools.sh
+## uncomment below to run this nb separately from RUNME nb if openslide-tools hasn't been installed
 # !apt-get install -y openslide-tools
 
 # COMMAND ----------

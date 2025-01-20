@@ -4,18 +4,6 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,[RUNME clusters config specifies cluster lib]
-## uncomment below to run this nb separately from RUNME nb
-# %pip install openslide-python
-# dbutils.library.restartPython()
-
-# COMMAND ----------
-
-# DBTITLE 1,cluster init file: openslide-tools.sh
-# !apt-get install -y openslide-tools
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC # Distributed patch generation
 # MAGIC In this notebook we use spark's `pandas_udfs` to efficiently distribute patch generation process. Now that we have annotations and meta-data stored in delta, we can distribute patch generation using `pandas_udf`s in spark. 
@@ -23,7 +11,20 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 0. Retrieve Configuration
+# MAGIC ## 0. Set & Retrieve Configuration
+
+# COMMAND ----------
+
+# DBTITLE 1,[RUNME clusters config specifies cluster lib]
+## uncomment below to run this nb separately from RUNME nb if openslide-python hasn't been installed
+# %pip install openslide-python
+# dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# DBTITLE 1,cluster init file: openslide-tools.sh
+## uncomment below to run this nb separately from RUNME nb if openslide-tools hasn't been installed
+# !apt-get install -y openslide-tools
 
 # COMMAND ----------
 

@@ -29,6 +29,19 @@ else:
 
 # COMMAND ----------
 
+# DBTITLE 1,[RUNME clusters config specifies cluster lib]
+## uncomment below to run this nb separately from RUNME nb if openslide-python hasn't been installed
+# %pip install openslide-python
+# dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# DBTITLE 1,cluster init file: openslide-tools.sh would install this
+## uncomment below to run this nb separately from RUNME nb if openslide-tools hasn't been installed
+# !apt-get install -y openslide-tools
+
+# COMMAND ----------
+
 # DBTITLE 1,run Config without overwriting patches
 # MAGIC %run ./config/0-config $project_name=digital_pathology $overwrite_old_patches=no $max_n_patches=2000
 
@@ -277,7 +290,7 @@ model_ft.fc = nn.Linear(num_ftrs, 2)
 
 model_ft = model_ft.to(device)
 
-# ## UPDATE TO USE ALL CORES 
+# ## UNCOMMENT TO USE ALL CORES 
 # if torch.cuda.is_available():
 #   print(f'using {torch. cuda. device_count() } available cuda cores .... ')
 #   model_ft = model_ft.cuda()
