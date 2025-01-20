@@ -43,7 +43,7 @@
 
 # DBTITLE 1,Set nb parameters with widgets
 dbutils.widgets.text('catalog_name','dbdemos') ## update to use specific catalog if needed
-dbutils.widgets.text('project_name','digital_pathology') ## using underscore for UC is preferred
+dbutils.widgets.text('project_name','digital_pathology') ## using underscore for UC is preferred | updated project_data_paths as well to match
 dbutils.widgets.dropdown('overwrite_old_patches','no',['yes','no'])
 dbutils.widgets.text('max_n_patches','500')
 
@@ -79,7 +79,7 @@ spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog_name}.{project_name}.files")
 # COMMAND ----------
 
 # DBTITLE 1,Specify path to raw data for each project
-project_data_paths = {'digital_pathology':"/databricks-datasets/med-images/camelyon16/",
+project_data_paths = {'digital_pathology':"/databricks-datasets/med-images/camelyon16/", 
                       'omop-cdm-100K':"s3://hls-eng-data-public/data/rwe/all-states-90K/",
                       "omop-cdm-10K":"s3://hls-eng-data-public/data/synthea/",
                       'psm':"s3://hls-eng-data-public/data/rwe/dbx-covid-sim/"

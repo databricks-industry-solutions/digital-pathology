@@ -299,6 +299,362 @@ job_json = {
 
 # COMMAND ----------
 
+# DBTITLE 1,test
+# job_json = {
+#             "name": "[RUNNER]_digital_pathology_mm20250119",
+#             "email_notifications": {},
+#             "webhook_notifications": {},
+#             "timeout_seconds": 28800,
+#             "max_concurrent_runs": 1,
+#             "tasks": [
+#               {
+#                 "task_key": "Pathology_00",
+#                 "run_if": "ALL_SUCCESS",
+#                 "notebook_task": {
+#                   "notebook_path": f"{nsc.solacc_path}/00-create-annotation-deltalake",
+#                   "source": "WORKSPACE"
+#                 },
+#                 "job_cluster_key": "pathology_14-3-x_cpu_cluster",
+#                 "timeout_seconds": 0,
+#                 "email_notifications": {}
+#               },
+#               {
+#                 "task_key": "Pathology_05",
+#                 "depends_on": [
+#                   {
+#                     "task_key": "Pathology_02"
+#                   }
+#                 ],
+#                 "run_if": "ALL_SUCCESS",
+#                 "notebook_task": {
+#                   "notebook_path": f"{nsc.solacc_path}/05-training",
+#                   "source": "WORKSPACE"
+#                 },
+#                 "job_cluster_key": "pathology_14-3-x_gpu_cluster_w_init",
+#                 "libraries": [
+#                   {
+#                     "pypi": {
+#                       "package": "openslide-python"
+#                     }
+#                   }
+#                 ],
+#                 "timeout_seconds": 0,
+#                 "email_notifications": {}
+#               },
+#               {
+#                 "task_key": "Pathology_06",
+#                 "depends_on": [
+#                   {
+#                     "task_key": "Pathology_05"
+#                   }
+#                 ],
+#                 "run_if": "ALL_SUCCESS",
+#                 "notebook_task": {
+#                   "notebook_path": f"{nsc.solacc_path}/06-metastasis-heatmap",
+#                   "source": "WORKSPACE"
+#                 },
+#                 "job_cluster_key": "pathology_14-3-x_gpu_cluster_w_init",
+#                 "libraries": [
+#                   {
+#                     "pypi": {
+#                       "package": "openslide-python"
+#                     }
+#                   }
+#                 ],
+#                 "timeout_seconds": 0,
+#                 "email_notifications": {}
+#               },
+#               {
+#                 "task_key": "Pathology_01",
+#                 "depends_on": [
+#                   {
+#                     "task_key": "Pathology_00"
+#                   }
+#                 ],
+#                 "run_if": "ALL_SUCCESS",
+#                 "notebook_task": {
+#                   "notebook_path": f"/Workspace{nsc.solacc_path}/01-README",
+#                   "source": "WORKSPACE"
+#                 },
+#                 "job_cluster_key": "pathology_14-3-x_cpu_cluster_w_init",
+#                 "libraries": [
+#                   {
+#                     "pypi": {
+#                       "package": "openslide-python"
+#                     }
+#                   }
+#                 ],
+#                 "timeout_seconds": 0,
+#                 "email_notifications": {},
+#                 "webhook_notifications": {}
+#               },
+#               {
+#                 "task_key": "Pathology_02",
+#                 "depends_on": [
+#                   {
+#                     "task_key": "Pathology_01"
+#                   }
+#                 ],
+#                 "run_if": "ALL_SUCCESS",
+#                 "notebook_task": {
+#                   "notebook_path": f"/Workspace{nsc.solacc_path}/02-patch-generation",
+#                   "source": "WORKSPACE"
+#                 },
+#                 "job_cluster_key": "pathology_14-3-x_cpu_cluster_w_init",
+#                 "libraries": [
+#                   {
+#                     "pypi": {
+#                       "package": "openslide-python"
+#                     }
+#                   }
+#                 ],
+#                 "timeout_seconds": 0,
+#                 "email_notifications": {},
+#                 "webhook_notifications": {}
+#               },
+#               {
+#                 "task_key": "Pathology_03",
+#                 "depends_on": [
+#                   {
+#                     "task_key": "Pathology_02"
+#                   }
+#                 ],
+#                 "run_if": "ALL_SUCCESS",
+#                 "notebook_task": {
+#                   "notebook_path": f"/Workspace{nsc.solacc_path}/03-feature-extraction",
+#                   "source": "WORKSPACE"
+#                 },
+#                 "job_cluster_key": "pathology_14-3-x_cpu_cluster_w_init",
+#                 "libraries": [
+#                   {
+#                     "pypi": {
+#                       "package": "openslide-python"
+#                     }
+#                   }
+#                 ],
+#                 "timeout_seconds": 0,
+#                 "email_notifications": {},
+#                 "webhook_notifications": {}
+#               },
+#               {
+#                 "task_key": "Pathology_04",
+#                 "depends_on": [
+#                   {
+#                     "task_key": "Pathology_03"
+#                   }
+#                 ],
+#                 "run_if": "ALL_SUCCESS",
+#                 "notebook_task": {
+#                   "notebook_path": f"/Workspace{nsc.solacc_path}/04-unsupervised-learning",
+#                   "source": "WORKSPACE"
+#                 },
+#                 "job_cluster_key": "pathology_14-3-x_cpu_cluster_w_init",
+#                 "libraries": [
+#                   {
+#                     "pypi": {
+#                       "package": "openslide-python"
+#                     }
+#                   }
+#                 ],
+#                 "timeout_seconds": 0,
+#                 "email_notifications": {},
+#                 "webhook_notifications": {}
+#               }
+#             ],
+#             "job_clusters": [
+#               {
+#                 "job_cluster_key": "pathology_14-3-x_cpu_cluster",
+#                 "new_cluster": {
+#                   "spark_version": "14.3.x-cpu-ml-scala2.12",
+#                   "aws_attributes": {
+#                     "availability": "ON_DEMAND",
+#                     "zone_id": "auto"
+#                   },
+#                   "node_type_id": "i3.xlarge",
+#                   # "enable_elastic_disk": False,
+#                   "data_security_mode": "SINGLE_USER",
+#                   "num_workers": 2
+#                 }
+#               },
+#               {
+#                 "job_cluster_key": "pathology_14-3-x_gpu_cluster_w_init",
+#                 "new_cluster": {
+#                   "spark_version": "14.3.x-gpu-ml-scala2.12",
+#                   "aws_attributes": {
+#                     "availability": "ON_DEMAND",
+#                     "zone_id": "auto"
+#                   },
+#                   "node_type_id": "g4dn.4xlarge",
+#                   # "enable_elastic_disk": False,
+#                   "data_security_mode": "SINGLE_USER",
+#                   "num_workers": 2
+#                 }
+#               },
+#               {
+#                 "job_cluster_key": "pathology_14-3-x_cpu_cluster_w_init",
+#                 "new_cluster": {
+#                   "cluster_name": "",
+#                   "spark_version": "14.3.x-cpu-ml-scala2.12",
+#                   "aws_attributes": {
+#                     "first_on_demand": 0,
+#                     "availability": "ON_DEMAND",
+#                     "zone_id": "auto",
+#                     "spot_bid_price_percent": 100,
+#                     "ebs_volume_count": 0
+#                   },
+#                   "node_type_id": "i3.xlarge",
+#                   # "enable_elastic_disk": False,
+#                   "init_scripts": [
+#                     {
+#                       "volumes": {
+#                         "destination": "/Volumes/dbdemos/digital_pathology/files/openslide-tools.sh"
+#                       }
+#                     }
+#                   ],
+#                   "data_security_mode": "SINGLE_USER",
+#                   "num_workers": 2
+#                 }
+#               }
+#             ],
+#             "tags": {
+#               "do_not_delete": "true",
+#               "group": "HLS",
+#               "removeAfter": "2026-01-31",
+#               "usage": "solacc_testing"
+#             },
+#             "run_as": {
+#               "user_name": nsc.username
+#             }
+#           }
+
+# COMMAND ----------
+
+# DBTITLE 1,Workflow YAML
+# resources:
+#   jobs:
+#     RUNNER_digital_pathology_mm20250119:
+#       name: "[RUNNER]_digital_pathology_mm20250119"
+#       timeout_seconds: 28800
+#       tasks:
+#         - task_key: Pathology_00
+#           notebook_task:
+#             notebook_path: /Users/may.merkletan@databricks.com/REPOs/digital-pathology/00-create-annotation-deltalake
+#             source: WORKSPACE
+#           job_cluster_key: pathology_14-3-x_cpu_cluster
+#         - task_key: Pathology_01
+#           depends_on:
+#             - task_key: Pathology_00
+#           notebook_task:
+#             notebook_path: /Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/01-README
+#             source: WORKSPACE
+#           job_cluster_key: pathology_14-3-x_cpu_cluster_w_init
+#           libraries:
+#             - pypi:
+#                 package: openslide-python
+#         - task_key: Pathology_02
+#           depends_on:
+#             - task_key: Pathology_01
+#           notebook_task:
+#             notebook_path: /Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/02-patch-generation
+#             source: WORKSPACE
+#           job_cluster_key: pathology_14-3-x_cpu_cluster_w_init
+#           libraries:
+#             - pypi:
+#                 package: openslide-python
+#         - task_key: Pathology_03
+#           depends_on:
+#             - task_key: Pathology_02
+#           notebook_task:
+#             notebook_path: /Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/03-feature-extraction
+#             source: WORKSPACE
+#           job_cluster_key: pathology_14-3-x_cpu_cluster_w_init
+#           libraries:
+#             - pypi:
+#                 package: openslide-python
+#         - task_key: Pathology_04
+#           depends_on:
+#             - task_key: Pathology_03
+#           notebook_task:
+#             notebook_path: /Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/04-unsupervised-learning
+#             source: WORKSPACE
+#           job_cluster_key: pathology_14-3-x_cpu_cluster_w_init
+#           libraries:
+#             - pypi:
+#                 package: openslide-python
+#         - task_key: Pathology_05
+#           depends_on:
+#             - task_key: Pathology_02
+#           notebook_task:
+#             notebook_path: /Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/05-training
+#             source: WORKSPACE
+#           job_cluster_key: pathology_14-3-x_gpu_cluster_w_init
+#           libraries:
+#             - pypi:
+#                 package: openslide-python
+#         - task_key: Pathology_06
+#           depends_on:
+#             - task_key: Pathology_05
+#           notebook_task:
+#             notebook_path: /Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/06-metastasis-heatmap
+#             source: WORKSPACE
+#           job_cluster_key: pathology_14-3-x_gpu_cluster_w_init
+#           libraries:
+#             - pypi:
+#                 package: openslide-python
+#       job_clusters:
+#         - job_cluster_key: pathology_14-3-x_cpu_cluster
+#           new_cluster:
+#             spark_version: 14.3.x-cpu-ml-scala2.12
+#             aws_attributes:
+#               availability: ON_DEMAND
+#               zone_id: auto
+#             node_type_id: i3.xlarge
+#             enable_elastic_disk: false
+#             data_security_mode: SINGLE_USER
+#             num_workers: 2
+#         - job_cluster_key: pathology_14-3-x_cpu_cluster_w_init
+#           new_cluster:
+#             cluster_name: ""
+#             spark_version: 14.3.x-cpu-ml-scala2.12
+#             aws_attributes:
+#               first_on_demand: 0
+#               availability: ON_DEMAND
+#               zone_id: auto
+#               spot_bid_price_percent: 100
+#               ebs_volume_count: 0
+#             node_type_id: i3.xlarge
+#             enable_elastic_disk: false
+#             init_scripts:
+#               - volumes:
+#                   destination: /Volumes/dbdemos/digital_pathology/files/openslide-tools.sh
+#             data_security_mode: SINGLE_USER
+#             num_workers: 2
+#         - job_cluster_key: pathology_14-3-x_gpu_cluster_w_init
+#           new_cluster:
+#             cluster_name: ""
+#             spark_version: 14.3.x-gpu-ml-scala2.12
+#             aws_attributes:
+#               first_on_demand: 0
+#               availability: ON_DEMAND
+#               zone_id: auto
+#               spot_bid_price_percent: 100
+#               ebs_volume_count: 0
+#             node_type_id: g4dn.4xlarge
+#             enable_elastic_disk: false
+#             init_scripts:
+#               - volumes:
+#                   destination: /Volumes/dbdemos/digital_pathology/files/openslide-tools.sh
+#             data_security_mode: SINGLE_USER
+#             num_workers: 2
+#       tags:
+#         do_not_delete: "true"
+#         group: HLS
+#         removeAfter: 2026-01-31
+#         usage: solacc_testing
+
+
+# COMMAND ----------
+
 # DBTITLE 1,Deploy Workflow Pipeline
 dbutils.widgets.dropdown("run_job", "False", ["True", "False"])
 run_job = dbutils.widgets.get("run_job") == "True"
@@ -309,13 +665,13 @@ nsc.deploy_compute(job_json, run_job=run_job)
 # MAGIC %md
 # MAGIC #### Make sure that task compute includes the `openslide-tools.sh` where it is required 
 # MAGIC
-# MAGIC After running the deploy code and when the Workflow `[RUNNER]_digital_pathology_{user_initials}{YYYYMMDD}` and the 3 `pathology_13-4-x_{cpu/gpu}_cluster{_w_init}` clusters are set up:     
+# MAGIC After running the deploy code and when the Workflow `[RUNNER]_digital_pathology_{user_initials}{YYYYMMDD}` and the 3 `pathology_13-4-x_{cpu/gpu}_cluster{_w_init}` clusters are set up:
 # MAGIC
 # MAGIC <!-- <div style="text-align: center;"> -->
 # MAGIC <img src="/Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/imgs/CheckEachCompute_cpuORgpu_cluster_w_init_checkAdvOptions.png" alt="CheckEachCompute_cpuORgpu_cluster_w_init_checkAdvOptions" width="1600" height="600">
 # MAGIC <!-- </div> -->
 # MAGIC
-# MAGIC **Check** within the created compute resource's Advance Options that `openslide-tools.sh` is added to `Init Scripts` for clusters that require them e.g. `pathology_13-4-x_{cpu/gpu}_cluster_w_init` and notebooks that would require their use run independently before running the full workflow.    
+# MAGIC **Check** within the created compute resource's Advance Options that `openslide-tools.sh` is added to `Init Scripts` for clusters that require them e.g. `pathology_13-4-x_{cpu/gpu}_cluster_w_init` and notebooks that would require their use run independently before running the full workflow.
 # MAGIC
 # MAGIC <div style="display: flex; justify-content: center; gap: 20px;">
 # MAGIC     <img src="/Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/imgs/CheckEachTask_cluster_w_init_checkAdvOptions.png" alt="CheckEachTask_cluster_w_init_checkAdvOptions" width="800" height="600">      
