@@ -4,6 +4,18 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,[RUNME clusters config specifies cluster lib]
+## uncomment below to run this nb separately from RUNME nb
+# %pip install openslide-python
+# dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# DBTITLE 1,cluster init file: openslide-tools.sh
+# !apt-get install -y openslide-tools
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC # Distributed feature extraction
 # MAGIC In this notebook we use spark's `pandas_udfs` to efficiently distribute feature extraction process. The extracted features are then can be used to visually inspect the structure of extracted patches.
@@ -17,37 +29,26 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 0. Initial Configuration
+# MAGIC ## 0. Set & Retrieve Configuration 
 
 # COMMAND ----------
 
-# DBTITLE 1,[RUNME clusters config specifies cluster lib]
-## uncomment below to run this nb separately from RUNME nb
-# %pip install openslide-python
-# dbutils.library.restartPython()
-
-# COMMAND ----------
-
-# %run ./config/0-config $project_name=digital_pathology $overwrite_old_patches=no $max_n_patches=2000
-
-# COMMAND ----------
-
+# DBTITLE 1,Set spark maxRecordsPerBatch confg
 spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", "1024")
 
 # COMMAND ----------
 
+# DBTITLE 1,Retrieve Configs
 import json
 import os
 from pprint import pprint
 
 catalog_name = 'dbdemos'
-project_name='digital_pathology' #updated
-project_name2use = f"{project_name}".replace('-','_') ## for UC
+project_name='digital_pathology' 
+
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
 
-# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
-# config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
 config_path=f"/Volumes/{catalog_name}/{project_name}/files/{user_uid}_{project_name}_configs.json"
 
 try:
@@ -56,10 +57,6 @@ try:
 except FileNotFoundError:
   print('please run ./config notebook and try again')
   assert False
-
-# COMMAND ----------
-
-from pyspark.sql.functions import *
 
 # COMMAND ----------
 
@@ -77,6 +74,12 @@ LEVEL=settings['level']
 
 # COMMAND ----------
 
+# DBTITLE 1,Import spark.sql functions
+from pyspark.sql.functions import *
+
+# COMMAND ----------
+
+# DBTITLE 1,Load Annotations
 annotation_df=spark.read.load(f'{ANNOTATION_PATH}/delta/patch_labels').withColumn('imid',concat_ws('-',col('sid'),col('x_center'),col('y_center')))
 display(annotation_df)
 
@@ -88,6 +91,7 @@ display(annotation_df)
 
 # COMMAND ----------
 
+# DBTITLE 1,show IMG_PATH
 IMG_PATH
 
 # COMMAND ----------
@@ -123,10 +127,13 @@ dataset_df.display()
 
 # COMMAND ----------
 
-# import openslide
+# DBTITLE 1,import openslide and show path
+import openslide
+print(openslide.__file__)
 
 # COMMAND ----------
 
+# DBTITLE 1,Get Classifier/Embedding functions
 # MAGIC %run ./definitions
 
 # COMMAND ----------
@@ -136,6 +143,7 @@ dataset_df.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Apply vectorization with featurize_raw_img_series_udf
 features_df=dataset_df.select('*',featurize_raw_img_series_udf('content').alias('features'))
 
 # COMMAND ----------
@@ -159,17 +167,16 @@ features_df.sample(0.1, False).limit(2).display()
 
 # COMMAND ----------
 
+# DBTITLE 1,Write to UC Volumes
 features_df.write.format('delta').mode('overWrite').option("mergeSchema", "true").save(f"{BASE_PATH}/delta/features")
 
 # COMMAND ----------
 
+# DBTITLE 1,Check Volumes feature path
 display(dbutils.fs.ls(f"{BASE_PATH}/delta/features"))
 
 # COMMAND ----------
 
-## save as delta Table as well 
+# DBTITLE 1,Write to UC as Delta Table
+## save as UC Delta Table as well 
 features_df.write.format('delta').mode('overWrite').option("mergeSchema", "true").saveAsTable(f"{BASE_PATH.removeprefix('/Volumes/').removesuffix('/files').replace('/','.')}.features")
-
-# COMMAND ----------
-
-

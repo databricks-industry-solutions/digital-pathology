@@ -84,13 +84,19 @@ displayHTML(slides_html)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC [Alternatively, we recommend using a cluster with at least a ML-DBR-14.3LTS with GPU (see `./config/0-config`) and link the `openslide-tools.sh` file from workspace folder as init scripts within the Advanced Options]
+# MAGIC [Alternatively, we recommend using a cluster with at least a ML-DBR-14.3LTS (see `./config/0-config`) and link the `openslide-tools.sh` file from workspace folder as init scripts within the Advanced Options _OR_ run the `RUNME` notebook to setup the clusters and ink the `openslide-tools.sh` file from workspace folder as init scripts within the Advanced Options per RUNME guidance] 
 
 # COMMAND ----------
 
-# DBTITLE 1,Install openslide-python
+# DBTITLE 1,[RUNME clusters config specifies cluster lib]
+## uncomment below to run this nb separately from RUNME nb
 # %pip install openslide-python
 # dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# DBTITLE 1,cluster init file: openslide-tools.sh
+# !apt-get install -y openslide-tools
 
 # COMMAND ----------
 

@@ -11,7 +11,7 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,cluster init file: openslide-tools.sh would install this
+# DBTITLE 1,cluster init file: openslide-tools.sh
 # !apt-get install -y openslide-tools
 
 # COMMAND ----------
@@ -23,26 +23,21 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 0. Initial Configuration
+# MAGIC ## 0. Retrieve Configuration
 
 # COMMAND ----------
 
-# %run ./config/0-config $project_name=digital_pathology $overwrite_old_patches=yes $max_n_patches=2000
-
-# COMMAND ----------
-
+# DBTITLE 1,Retrieve Config
 import json
 import os
 from pprint import pprint
 
 catalog_name = 'dbdemos'
 project_name='digital_pathology' 
-# project_name2use = f"{project_name}".replace('-','_') #for UC
+
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
 
-# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
-# config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
 config_path=f"/Volumes/{catalog_name}/{project_name}/files/{user_uid}_{project_name}_configs.json"
 
 try:
@@ -86,14 +81,13 @@ MAX_N_PATCHES=settings['max_n_patches']
 
 # COMMAND ----------
 
-# DBTITLE 1,Load annotations
+# DBTITLE 1,Load patch_labels
 from pyspark.sql.functions import *
 
 ## read from UC Volumes
 # coordinates_df = spark.read.load(f'{ANNOTATION_PATH}/delta/patch_labels')
 
 ## read from UC table
-# coordinates_df = spark.read.table(f"mmt.{project_name2use}.patch_labels")
 coordinates_df = spark.read.table(f"{catalog_name}.{project_name}.patch_labels")
 
 df_patch_info = (
@@ -110,6 +104,7 @@ df_patch_info = (
 
 # COMMAND ----------
 
+# DBTITLE 1,N patches for processing
 print(f'there are {df_patch_info.count()} patches to process.')
 display(df_patch_info)
 
@@ -120,6 +115,7 @@ display(df_patch_info)
 
 # COMMAND ----------
 
+# DBTITLE 1,Display patches
 df_patch_info.groupBy('train_test').avg('label').display()
 
 # COMMAND ----------
@@ -131,10 +127,12 @@ df_patch_info.groupBy('train_test').avg('label').display()
 
 # COMMAND ----------
 
+# DBTITLE 1,set spark maxRecordsPerBatch config
 spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", "1024")
 
 # COMMAND ----------
 
+# DBTITLE 1,check path
 PatchGenerator.__doc__, IMG_PATH
 
 # COMMAND ----------
@@ -158,10 +156,8 @@ dataset_df = (
 
 # COMMAND ----------
 
-# DBTITLE 1,calls the execution of mapinpandas
+# DBTITLE 1,Call the execution of mapinpandas
 # display(dataset_df)
-
-# COMMAND ----------
 
 dataset_df.count()
 
@@ -169,9 +165,10 @@ dataset_df.count()
 
 # COMMAND ----------
 
+# DBTITLE 1,Repartition and Display
 df_patch_info.repartition(64).withColumn('img_path',concat_ws('/',lit(IMG_PATH),col('train_test'),col('label'))).display()
 
 # COMMAND ----------
 
-# DBTITLE 1,display the images using the path info
+# DBTITLE 1,Display the images using the path info
 spark.read.format('binaryFile').load(f'{IMG_PATH}/*/*/*.jpg').withColumn('sid',regexp_extract('path','(\\w+)_(\\d+)', 0)).display()

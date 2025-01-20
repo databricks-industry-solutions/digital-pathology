@@ -11,16 +11,8 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,if cuda available: !nvidia-smi
-import torch
-
-# Check if CUDA is available
-if torch.cuda.is_available():
-    # Run nvidia-smi to check GPU status
-    import os
-    os.system('nvidia-smi') #!nvidia-smi
-else:
-    print("CUDA is not available -- Using CPU")
+## if using GPU -- you can check available CUDA | otherwise code in this cell should be commented.
+!nvidia-smi
 
 # COMMAND ----------
 
@@ -166,6 +158,13 @@ mlflow.pytorch.autolog()
 # COMMAND ----------
 
 # DBTITLE 1,generic training function
+# import time
+# import copy
+# import torch
+# import mlflow
+# import mlflow.pytorch
+# from mlflow.models.signature import infer_signature
+
 def train_model(model, criterion, optimizer, scheduler, num_epochs=5, log_model=False, artifact_pathName=None):
     
     with mlflow.start_run(run_name='resnet-training') as run:
@@ -238,7 +237,12 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=5, log_model=
         mlflow.log_metric('best_accuracy', float(best_acc))
         mlflow.log_params({"optimizer": str(optimizer), "num_epochs": num_epochs})
         
-        # LOG MODEL TO MLFLOW
+        ### [original]  
+        #   if(log_model):
+        #     mlflow.pytorch.log_model(model_ft,
+        #                              'resnet-dp',
+        #                              )
+
         if log_model:
             # Create example input and infer signature
             example_input = torch.randn(1, 3, 224, 224).to(device)
@@ -254,10 +258,21 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=5, log_model=
                 
     return run.info
   
+  #ref: https://mlflow.org/docs/latest/deep-learning/pytorch/guide/index.html
 
-  #refs: 
-  # https://mlflow.org/docs/latest/deep-learning/pytorch/guide/index.html 
-  # https://mlflow.org/docs/latest/_modules/mlflow/pytorch.html
+# COMMAND ----------
+
+for inputs, labels in dataloaders['test']:
+  inputs0 = inputs.to(device)
+  labels0 = labels.to(device)
+
+# COMMAND ----------
+
+inputs0.size()
+
+# COMMAND ----------
+
+labels0
 
 # COMMAND ----------
 
@@ -320,7 +335,7 @@ mlflow.end_run()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ---   
+# MAGIC
 
 # COMMAND ----------
 
@@ -345,6 +360,8 @@ df = mlflow.search_runs([settings['experiment_id']]) #pandasDF
 # COMMAND ----------
 
 # DBTITLE 1,Rank by best accuracy
+# df.sort_values(by='metrics.best_accuracy',ascending=False).display()
+
 # Rank by best accuracy
 df_sorted = df.sort_values(by='metrics.best_accuracy', ascending=False)
 display(df_sorted)

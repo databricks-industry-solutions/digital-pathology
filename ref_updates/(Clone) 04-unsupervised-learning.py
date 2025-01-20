@@ -14,39 +14,103 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 0. Set & Retrieve Configuration
+# MAGIC ## 0. Initial Configuration
 
 # COMMAND ----------
 
-# DBTITLE 1,Install required dependencies for Umap
-# Read the requirements file
-with open('unsupervisedLearning_requirements.txt', 'r') as file:
-    packages = file.readlines()
+# DBTITLE 1,Install pinned dependencies & restart Python kernel
+## Pinned dependencies requirements
 
-# Install each package individually
-for package in packages:
-    package = package.strip()
-    if package:
-        try:
-            %pip install {package}
-        except Exception as e:
-            print(f"Failed to install {package}: {e}")
+%pip install --upgrade pip
 
-dbutils.library.restartPython()
+%pip install xarray #2025.1.1
+%pip install numpy==1.23.5  
+%pip install pandas==1.3.3
+
+%pip install matplotlib==3.7.0
+%pip install datashader --no-deps #==0.16.3
+# dask[complete]>=0.18.0
+# datashape>=0.5.1
+# pyct>=0.4.5
+%pip install bokeh==3.2.2
+%pip install holoviews==1.14.6
+%pip install scikit-image==0.25.0
+%pip install colorcet==3.1.0
+%pip install umap-learn==0.5.6
+# %pip install umap-learn[plot] ## this is best omitted due to conflicts
+%pip install dask==2021.9.1
+%pip install multipledispatch #1.0.0
+
+## could preinstall dependencies to Volumes if needed and add to sys.path()
+
+dbutils.library.restartPython() 
 
 # COMMAND ----------
 
-# DBTITLE 1,Retrieve Configs
+# import pandas
+# import matplotlib
+# import datashader
+# import bokeh
+# import holoviews
+# import skimage  # 'scikit-image' should be imported as 'skimage'
+# import colorcet
+
+# import umap
+# # import umap.plot ## do we need this??
+
+# COMMAND ----------
+
+# DBTITLE 1,check dependencies versions
+# import pandas, matplotlib, datashader, bokeh, holoviews, skimage, colorcet, umap
+# print("pandas version:", pandas.__version__)
+# print("matplotlib version:", matplotlib.__version__)
+# print("datashader version:", datashader.__version__)
+# print("bokeh version:", bokeh.__version__)
+# print("holoviews version:", holoviews.__version__)
+# print("scikit-image version:", skimage.__version__)
+# print("colorcet version:", colorcet.__version__)
+# print("umap-learn version:", umap.__version__)
+
+# import xarray, dask
+# print("xarray version:", xarray.__version__)
+# print("dask version:", dask.__version__)
+
+# pandas version: 1.3.3
+# matplotlib version: 3.7.0
+# datashader version: 0.16.3
+# bokeh version: 3.2.2
+# holoviews version: 1.14.6
+# scikit-image version: 0.25.0
+# colorcet version: 3.1.0
+# umap-learn version: 0.5.6
+# xarray version: 2025.1.1
+# dask version: 2021.09.1
+
+# COMMAND ----------
+
+# %pip install --upgrade pip
+# %pip install --upgrade dask
+# %pip install umap-learn umap-learn[plot] xarray pyarrow dask[dataframe] --upgrade
+# dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# %run ./config/0-config $project_name=digital_pathology $overwrite_old_patches=no $max_n_patches=2000
+
+# COMMAND ----------
+
 import json
 import os
 from pprint import pprint
 
 catalog_name='dbdemos'
-project_name='digital_pathology' 
+project_name='digital_pathology' #original
+# project_name2use = f"{project_name}".replace('-','_') ## for UC
 
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
-
+# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+# config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
 config_path=f"/Volumes/{catalog_name}/{project_name}/files/{user_uid}_{project_name}_configs.json"
 
 try:
@@ -58,11 +122,7 @@ except FileNotFoundError:
 
 # COMMAND ----------
 
-# DBTITLE 1,Extract Paths from Configs & define MLflow settings
 import mlflow
-# Set the registry URI to Unity Catalog
-mlflow.set_registry_uri("databricks-uc")
-
 WSI_PATH=settings['data_path']
 BASE_PATH=settings['base_path']
 ANNOTATION_PATH = BASE_PATH+"/annotations"
@@ -82,22 +142,23 @@ from pyspark.sql.types import *
 from pyspark.sql import Window
 import os
 
+
 import numpy as np
 import pandas as pd
 
 # COMMAND ----------
 
-# DBTITLE 1,Load extracted features from UC delta table
+# DBTITLE 1,Load extracted features from delta
+# img_features_df=spark.read.load(f"{BASE_PATH}/delta/features")
+
 img_features_df=spark.read.table(f"{catalog_name}.{project_name}.features")
 
 # COMMAND ----------
 
-# DBTITLE 1,check row count of img_features_df
 img_features_df.distinct().count()
 
 # COMMAND ----------
 
-# DBTITLE 1,check size of column feature
 img_features_df.select(size('features')).limit(1).show()
 
 # COMMAND ----------
@@ -107,7 +168,6 @@ img_features_df.select(size('features')).limit(1).show()
 
 # COMMAND ----------
 
-# DBTITLE 1,convert img_features_df to pandasDF
 img_features_pdf=img_features_df.toPandas()
 
 # COMMAND ----------
@@ -117,14 +177,12 @@ img_features_pdf=img_features_df.toPandas()
 
 # COMMAND ----------
 
-# DBTITLE 1,get m_samples and n_features
 n=len(img_features_pdf.features[0])
 m=img_features_pdf.shape[0]
 print(n,m)
 
 # COMMAND ----------
 
-# DBTITLE 1,reshape
 features_mat=np.concatenate(img_features_pdf.features.values,axis=0).reshape(m,n)
 features_mat.shape
 
@@ -136,13 +194,12 @@ features_mat.shape
 
 # COMMAND ----------
 
-# DBTITLE 1,Define Umap parameters - for interactive exploration
 dbutils.widgets.text(name='n_neighbors',defaultValue='15')
 dbutils.widgets.text(name='min_dist',defaultValue='0.1')
 
 # COMMAND ----------
 
-# DBTITLE 1,Import Umap Dependencies
+# DBTITLE 1,Import Dependencies (early)
 import pandas
 import matplotlib
 import datashader
@@ -152,33 +209,26 @@ import skimage  # 'scikit-image' should be imported as 'skimage'
 import colorcet
 
 import umap
+# import umap.plot ## not needed 
 
 # COMMAND ----------
 
-# DBTITLE 1,Set Umap Parameters
 n_neighbors=int(dbutils.widgets.get('n_neighbors'))
 min_dist=float(dbutils.widgets.get('min_dist'))
 
 # COMMAND ----------
 
-# DBTITLE 1,Define Umap get_embeddings function
-def get_embeddings(features_mat, n_neighbors, min_dist, n_components=2, run_name=None):
-    params = {
-        'n_neighbors': n_neighbors,
-        'min_dist': min_dist,
-        'n_components': n_components,
-    }
-    mapper = umap.UMAP(**params).fit(features_mat)
+def get_embeddings(features_mat,n_neighbors=n_neighbors,min_dist=min_dist,n_components=2):
+  params ={'n_neighbors':n_neighbors,
+               'min_dist':min_dist,
+               'n_components':n_components,
+          }
+  mapper = umap.UMAP(**params).fit(features_mat)
 
-    if run_name:
-        with mlflow.start_run(run_name=run_name):
-            for key, value in mapper.get_params().items():
-                mlflow.log_param(key, value)
-    else:
-        for key, value in mapper.get_params().items():
-            mlflow.log_param(key, value)
-    
-    return mapper
+  mlflow.end_run()
+  for key,value in mapper.get_params().items():
+    mlflow.log_param(key,value)
+  return(mapper)
 
 # COMMAND ----------
 
@@ -190,28 +240,21 @@ import torch
 print("GPU available?", torch.cuda.is_available())
 if torch.cuda.is_available():
     numba.config.THREADING_LAYER = 'workqueue' 
-    print('Set TBB library to "workqueue"')
 
 # COMMAND ----------
 
-# DBTITLE 1,Process 2D embeddings
-mlflow.end_run()
-
-mpper_2d = get_embeddings(features_mat, n_components=2, n_neighbors=n_neighbors, min_dist=min_dist, run_name="UMAP-2Dembedding")
+mpper_2d=get_embeddings(features_mat,n_components=2)
 
 # COMMAND ----------
 
-# DBTITLE 1,Combine 2D embeddings + img_features pandasDF
 embeddings2d_df=pd.concat([pd.DataFrame(mpper_2d.embedding_,columns=['c1','c2']),img_features_pdf[['id','x_center','y_center','label','slide_id']]],axis=1)
 
 # COMMAND ----------
 
-# DBTITLE 1,display
 embeddings2d_df
 
 # COMMAND ----------
 
-# DBTITLE 1,Use Plotly for Viz
 import plotly.express as px
 fig = px.scatter(embeddings2d_df,x='c1',y='c2',color='label',hover_name='slide_id',width=1000,height=700)
 fig.show()
@@ -228,23 +271,21 @@ fig.show()
 
 # COMMAND ----------
 
-# DBTITLE 1,log the 2D plot in mlflow run + UC Volumes
-from mlflow.tracking import MlflowClient
+# DBTITLE 1,log the plot in mlflow
+# dbutils.fs.put('file:/umap2d.html',fig.to_html(),overwrite=True)
+# mlflow.log_artifact('/umap2d.html','umap2d-plot')
 
+# COMMAND ----------
+
+# DBTITLE 1,log the plot in mlflow + UC Volumes
 # Define the path to the Unity Catalog volume
 uc_volume_path = f'/Volumes/{catalog_name}/{project_name}/files/umap2d.html'
 
 # Save the plot to the UC volume
 dbutils.fs.put(uc_volume_path, fig.to_html(), overwrite=True)
 
-## Get the most recent run ID in with settings['experiment_name'] -- it should be for run_name: "UMAP-2Dembedding"
-client = MlflowClient()
-experiment_id = mlflow.get_experiment_by_name(settings['experiment_name']).experiment_id
-runs = client.search_runs(experiment_id, order_by=["start_time desc"], max_results=1)
-run_id = runs[0].info.run_id
-
-## Log the artifact to the most recent run using MlflowClient
-client.log_artifact(run_id, uc_volume_path, 'umap2d-plot')
+# Log the artifact to MLflow
+mlflow.log_artifact(uc_volume_path, 'umap2d-plot')
 
 # COMMAND ----------
 
@@ -253,19 +294,14 @@ client.log_artifact(run_id, uc_volume_path, 'umap2d-plot')
 
 # COMMAND ----------
 
-# DBTITLE 1,Process 3D embeddings
-mlflow.end_run()
-
-mpper_3d = get_embeddings(features_mat, n_components=3, n_neighbors=n_neighbors, min_dist=min_dist, run_name="UMAP-3Dembedding")
+mpper_3d=get_embeddings(features_mat,n_components=3)
 
 # COMMAND ----------
 
-# DBTITLE 1,Combine 3D embeddings + img_features pandasDF
 embeddings3d_df=pd.concat([pd.DataFrame(mpper_3d.embedding_,columns=['c1','c2','c3']),img_features_pdf[['id','x_center','y_center','label','slide_id']]],axis=1)
 
 # COMMAND ----------
 
-# DBTITLE 1,Viz with Plotly
 import plotly.express as px
 fig = px.scatter_3d(embeddings3d_df,x='c1',y='c2',z='c3',color='label',hover_name='slide_id',width=1000,height=700)
 fig.show()

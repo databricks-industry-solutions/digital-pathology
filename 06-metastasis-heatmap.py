@@ -12,7 +12,7 @@
 # MAGIC </br>
 # MAGIC To do so, we use the our distributed segmentation approach to create patches from a given slide to be scored, and then use the pre-trained model to infer the probability of metastasis on each segment. We then visualize the results as a heatmap. 
 # MAGIC
-# MAGIC Note that, you need to have `openSlide` installed on the cluster to be able to generate patches (use the same cluster you used for patch generation).
+# MAGIC **Note** that, you need to have `openSlide` installed on the cluster via cluster library ([`openslide-python` via pypi](https://pypi.org/project/openslide-python/)) and `openslide-tools.sh` as `init script` within cluster advance options to be able to generate patches (use the same cluster you used for patch generation).
 
 # COMMAND ----------
 
@@ -24,27 +24,27 @@
 # COMMAND ----------
 
 # DBTITLE 1,cluster init file: openslide-tools.sh would install this
+## uncomment below to run this nb separately from RUNME nb
 # !apt-get install -y openslide-tools
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 0. Initial Configuration
+# MAGIC ## 0. Retrieve & Set Configuration
 
 # COMMAND ----------
 
+# DBTITLE 1,Retrieve Configs
 import json
 import os
 from pprint import pprint
 
 catalog_name= "dbdemos"
-project_name='digital_pathology' #original
-project_name2use = f"{project_name}".replace('-','_') ## for UC
+project_name='digital_pathology' #underscore is better for UC
+
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
 
-# config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
-# config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
 config_path=f"/Volumes/{catalog_name}/{project_name}/files/{user_uid}_{project_name}_configs.json"
 
 try:
@@ -56,12 +56,14 @@ except FileNotFoundError:
 
 # COMMAND ----------
 
+# DBTITLE 1,Extract Configs Paths
 BASE_PATH=settings['base_path']
 IMG_PATH = settings['img_path']
 ANNOTATION_PATH = BASE_PATH+"/annotations"
 
 # COMMAND ----------
 
+# DBTITLE 1,Load Dependencies
 import io
 
 import pandas as pd
@@ -80,11 +82,11 @@ import mlflow.pytorch
 
 # COMMAND ----------
 
-# DBTITLE 1,setup paths
+# DBTITLE 1,Setup IMG paths
 IMG_PATH = settings['img_path']
 WSI_PATH = settings['data_path']
 mlflow.set_experiment(settings['experiment_name'])
-# TEMP_PATCH_PATH="/ml/tmp/hls"
+
 TEMP_PATCH_PATH=f"{BASE_PATH}/tmp/hls"
 PATCH_SIZE=settings['patch_size']
 LEVEL=settings['level']
@@ -92,12 +94,14 @@ dbutils.fs.mkdirs(TEMP_PATCH_PATH)
 
 # COMMAND ----------
 
+# DBTITLE 1,Check for GPU/Cuda availability
 cuda = True, #False
 use_cuda = cuda and torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
 
 # COMMAND ----------
 
+# DBTITLE 1,Show Device
 device
 
 # COMMAND ----------
@@ -114,6 +118,7 @@ device
 
 # COMMAND ----------
 
+# DBTITLE 1,Define Patch Generation Function
 def generate_patch_grid_df(*args):
   x_min,x_max,y_min,y_max, slide_name = args
   
@@ -144,11 +149,13 @@ def generate_patch_grid_df(*args):
 
 # COMMAND ----------
 
+# DBTITLE 1,Check an IMG slide segment example
 name="tumor_058"
 x_min,x_max,y_min,y_max = (23437,53337,135815,165715)
 
 # COMMAND ----------
 
+# DBTITLE 1,Generate Patch for test IMG slide segment example
 df_patch_info,grid_size = generate_patch_grid_df(x_min,x_max,y_min,y_max,name)
 df_patch_info=df_patch_info.selectExpr(f"'{name}' as sid","x_center","y_center","i_j as label")
 display(df_patch_info)
@@ -161,18 +168,22 @@ display(df_patch_info)
 
 # COMMAND ----------
 
+# DBTITLE 1,Get classifier functions
 # MAGIC %run ./definitions
 
 # COMMAND ----------
 
+# DBTITLE 1,Set spark maxRecordsPerBatch config
 spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", "1024")
 
 # COMMAND ----------
 
+# DBTITLE 1,Define patch_generator function
 patch_generator=PatchGenerator(wsi_path=WSI_PATH,level=LEVEL,patch_size=PATCH_SIZE, img_path=IMG_PATH)
 
 # COMMAND ----------
 
+# DBTITLE 1,Process IMGs as patches using patch_generator
 dataset_df = (
   df_patch_info
   .repartition(64)
@@ -183,15 +194,19 @@ dataset_df = (
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Now by applying the `count` operation we evoke an action which results in patches being generated and written to the temporary location `TEMP_PATCH_PATH`
+# MAGIC Now by applying the `count()` OR `show()` operation we evoke an action which results in patches being generated and written to the temporary location `TEMP_PATCH_PATH`.  
+# MAGIC NB -- this can take a while
 
 # COMMAND ----------
 
+# DBTITLE 1,Run / Check patch DF
+dataset_df.limit(10).show()
 # dataset_df.count()
 # 10000
 
 # COMMAND ----------
 
+# DBTITLE 1,Import openslide library | show its path
 import openslide
 print(openslide.__file__)
 
@@ -203,30 +218,74 @@ print(openslide.__file__)
 
 # COMMAND ----------
 
-cuda = True #False
-use_cuda = cuda and torch.cuda.is_available()
-device = torch.device("cuda" if use_cuda else "cpu")
-
-# COMMAND ----------
-
 # MAGIC %md
-# MAGIC To estimate the probabilities, we first need to load the trained model in the previous step. We can use `mlflow.search_runs` function to lookup the best model (based on accuracy that is logged during the training step) and load the model for scoring:
+# MAGIC **To estimate the probabilities, we first need to load the trained model in the previous step.**       
+# MAGIC
+# MAGIC We can use `mlflow.search_runs` function to lookup the best model (based on accuracy that is logged during the training step) and load the model for scoring.    
+# MAGIC _[The following code snippets illustrate how this can be done but is commented out here in favor of the alternative below]_
 
 # COMMAND ----------
 
-best_run_id=mlflow.search_runs([settings['experiment_id']]).sort_values(by='metrics.best_accuracy',ascending=False)['run_id'].iloc[0]
-model_name='resnet-dp'
+# DBTITLE 1,Get the best mlflow expt run by id
+# best_run_id=mlflow.search_runs([settings['experiment_id']]).sort_values(by='metrics.best_accuracy',ascending=False)['run_id'].iloc[0]
+# model_artifactpath_name='resnet-dp'
 
 # COMMAND ----------
 
 # DBTITLE 1,load the model
-import mlflow
-import mlflow.pytorch
-MODEL_URI = f'runs:/{best_run_id}/{model_name}'
-loaded_model = mlflow.pytorch.load_model(model_uri=MODEL_URI,map_location=torch.device('cpu'))
+# import mlflow
+# import mlflow.pytorch
+# MODEL_URI = f'runs:/{best_run_id}/{model_artifactpath_name}'
+# loaded_model = mlflow.pytorch.load_model(model_uri=MODEL_URI,map_location=torch.device('cpu'))
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC **Alternatively, we can load our UC registered model with the 'best performance metric'**
+
+# COMMAND ----------
+
+# DBTITLE 1,ALTERNATIVELY -- retrieve & load UC registered model
+from mlflow.tracking import MlflowClient
+from pprint import pprint
+
+# Initialize the MLflow client
+client = MlflowClient()
+
+# Define the UC model 
+model_name = "resnet_bestmetric"
+full_model_name = f"{catalog_name}.{project_name}.{model_name}"
+
+# Search for model versions
+model_versions = client.search_model_versions(f"name='{full_model_name}'")
+
+# Convert model versions to a list of dictionaries
+model_versions_list = [dict(mv) for mv in model_versions]
+
+# Sort the model versions and pick the largest one
+latest_version = sorted(
+    model_versions_list, 
+    key=lambda mv: int(mv['version'])
+)[-1]
+
+# Print the latest model version
+pprint(latest_version)
+# latest_version['version']
+
+# Define the UC model URI
+model_version = latest_version['version']
+MODEL_URI = f"models:/{full_model_name}/{model_version}" ## MODEL_URI used in get_model_for_eval() & predict_batch_udf
+
+# Load the model from the Model Registry
+# loaded_model = mlflow.pytorch.load_model(MODEL_URI)
+loaded_model = mlflow.pytorch.load_model(model_uri=MODEL_URI,map_location=torch.device('cpu'))
+
+# Now you can use the loaded_model for inference
+
+# COMMAND ----------
+
+# DBTITLE 1,Define pandas_udf for batch inferencing
+## Extract model state for broadcasting 
 model_state = loaded_model.state_dict()
 bc_model_state = sc.broadcast(model_state)
 
@@ -260,7 +319,7 @@ images=spark.read.format('binaryFile').load(TEMP_PATCH_PATH).repartition(64)
 
 # COMMAND ----------
 
-# images.count()
+images.count()
 
 # COMMAND ----------
 
@@ -282,6 +341,7 @@ predictions_pdf=(
 
 # COMMAND ----------
 
+# DBTITLE 1,show predictions
 predictions_pdf
 
 # COMMAND ----------

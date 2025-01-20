@@ -1,46 +1,49 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC This notebook is to setup your intial configuration for your project. You may only need to run this once and after that project configuration can be shared with other notebooks.
+# MAGIC This notebook is to setup your intial configuration for your project.   
+# MAGIC **_NB: you may want to specify a different `catalog_name` to avoid overwriting or using the same Unity Catalog as other users testing the same solution accelerator._**   
+# MAGIC You may only need to run this once and after that project configuration can be shared with other notebooks.   
 # MAGIC This notebook is executed from by `01-create-annotation-deltalake`.
+# MAGIC
+# MAGIC
 
 # COMMAND ----------
 
 # DBTITLE 1,Interactive Cluster setup info.
-## Interactive Cluster Info.
-
-# 14.3.x-gpu-ml-scala2.12 | Unity Catalog | g4dn.4xlarge
-# 2-8 Workers -- 128-512 GB Memory, 32-128 Cores 
-# 1 Driver -- 64 GB Memory, 16 Cores 
-
-# SINGLE NODE
-# 14.3.x-gpu-ml-scala2.12 | Unity Catalog | g4dn.8xlarge
-# 1 Driver -- 128 GB Memory, 32 Cores 
-
-# 14.3.x-cpu-ml-scala2.12 | Unity Catalog | i3.2xlarge
-# 1 Driver -- 61 GB Memory, 8 Cores 
-
-#*# 14.3.x-cpu-ml-scala2.12 | Unity Catalog | i3.4xlarge
-# 1 Driver -- 122 GB Memory, 16 Cores 
-
-## include init scripts: /Workspace/Users/<user-email>/<repoORdirectory-location>/digital-pathology/openslide-tools.sh
+# MAGIC %md
+# MAGIC **Suggested Interactive Cluster Info.**  
+# MAGIC If you choose to run the notebooks separately and interactively before using the RUNME notebook here are some recommended cluster settings for setting up interactive clusters.   
+# MAGIC
+# MAGIC ###### SINGLE NODE
+# MAGIC - 14.3.x-cpu-ml-scala2.12 | Unity Catalog | i3.4xlarge
+# MAGIC    - 1 Driver -- 122 GB Memory, 16 Cores 
+# MAGIC
+# MAGIC - 14.3.x-gpu-ml-scala2.12 | Unity Catalog | g4dn.4xlarge
+# MAGIC    - 2-8 Workers | 128-512 GB Memory| 32-128 Cores
+# MAGIC    - 1 Driver | 64 GB Memory, 16 Cores | Runtime
+# MAGIC
+# MAGIC
+# MAGIC ###### NB: Remember to include init scripts path (e.g. from Workspace) in Cluster Advance Options :  
+# MAGIC     - /Workspace/Users/<user-email>/<repoORdirectory-location>/digital-pathology/openslide-tools.sh
 
 # COMMAND ----------
 
 # DBTITLE 1,Reset UC catalog-schema
- # %sql
+# %sql
+# -- if required uncomment to reset UC schema
 # DROP SCHEMA IF EXISTS dbdemos.`digital-pathology` CASCADE;
 
 # COMMAND ----------
 
 # DBTITLE 1,Clear widgets if updates/reset required
-## if required reset widgets
+## if required uncomment to reset widgets
 # dbutils.widgets.removeAll()
 
 # COMMAND ----------
 
 # DBTITLE 1,Set nb parameters with widgets
 dbutils.widgets.text('catalog_name','dbdemos') ## update to use specific catalog if needed
-dbutils.widgets.text('project_name','digital_pathology') ## using underscore for UC
+dbutils.widgets.text('project_name','digital_pathology') ## using underscore for UC is preferred
 dbutils.widgets.dropdown('overwrite_old_patches','no',['yes','no'])
 dbutils.widgets.text('max_n_patches','500')
 
@@ -97,14 +100,10 @@ class SolAccUtil:
     user_uid = abs(hash(user)) % (10 ** 5)
     
     catalog = catalog_name # specify & use specific catalog (above) if needed
-    
-    ## updated project_name with underscore instead
-    # project_name2use = f"{project_name}".replace('-','_') ## better to use '_' for UC
 
     if base_path!=None:
       base_path=base_path
-    else:      
-      # base_path = f"/Volumes/{catalog}/{project_name2use}/files"
+    else:            
       base_path = f"/Volumes/{catalog}/{project_name}/files"
       
     if data_path != None:
@@ -113,10 +112,8 @@ class SolAccUtil:
       data_path=project_data_paths[project_name] ## keep_same/original
      
     dbutils.fs.mkdirs(base_path)
-    # delta_path= f"/Volumes/{catalog}/{project_name2use}/files/delta"
     delta_path= f"/Volumes/{catalog}/{project_name}/files/delta"
-
-    # experiment_name=os.path.join('/Users',user,project_name2use) ## update if needed
+    
     experiment_name=os.path.join('/Users',user,project_name) ## update if needed
 
     ## to-check wrt model registration to UC params to add? 
@@ -129,12 +126,10 @@ class SolAccUtil:
     self.settings = {}
     self.settings['max_n_patches']=max_n_patches
     
-    # self.settings['img_path']=f'/Volumes/{catalog}/{project_name2use}/files/imgs' 
     self.settings['img_path']=f'/Volumes/{catalog}/{project_name}/files/imgs' 
 
     ## include these -- to update use in nbs 
     self.settings['catalog']=catalog
-    # self.settings['project_name2use']=project_name2use
     self.settings['project_name']=project_name
 
     self.settings['base_path']=base_path
@@ -199,13 +194,27 @@ project_utils = SolAccUtil(
 # DBTITLE 1,Write configurations for later access
 import json 
 
-## update to UC Volumes 
-# with open(f"/Volumes/mmt/{project_utils.settings['project_name2use']}/files/{project_utils.settings['user_uid']}_{project_utils.settings['project_name2use'] }_configs.json",'w') as f:
-
-## update to UC Volumes 
+## using UC Volumes 
 with open(f"/Volumes/{catalog_name}/{project_utils.settings['project_name']}/files/{project_utils.settings['user_uid']}_{project_utils.settings['project_name'] }_configs.json",'w') as f:
   f.write(json.dumps(project_utils.settings,indent=4))
 f.close()
+
+# COMMAND ----------
+
+# DBTITLE 1,Copy init script to Volumes path for use later
+import os
+import subprocess
+
+# Define the source and destination paths
+source_path = "openslide-tools.sh"
+destination_path = f"{project_utils.settings['base_path']}/openslide-tools.sh" #'/Volumes/dbdemos/digital_pathology/files/openslide-tools.sh'
+
+# Ensure the destination directory exists
+os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+
+# Use subprocess to copy the file
+subprocess.run(["cp", source_path, destination_path], check=True)
+# subprocess.run(["cat", destination_path], check=True)
 
 # COMMAND ----------
 
@@ -229,7 +238,3 @@ try:
   display(dbutils.fs.ls(project_utils.settings['img_path']))
 except:
   print('no existing patches')
-
-# COMMAND ----------
-
-

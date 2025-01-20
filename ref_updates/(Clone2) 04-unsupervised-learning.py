@@ -18,7 +18,6 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Install required dependencies for Umap
 # Read the requirements file
 with open('unsupervisedLearning_requirements.txt', 'r') as file:
     packages = file.readlines()
@@ -36,7 +35,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# DBTITLE 1,Retrieve Configs
+# DBTITLE 1,Read Configs
 import json
 import os
 from pprint import pprint
@@ -92,12 +91,10 @@ img_features_df=spark.read.table(f"{catalog_name}.{project_name}.features")
 
 # COMMAND ----------
 
-# DBTITLE 1,check row count of img_features_df
 img_features_df.distinct().count()
 
 # COMMAND ----------
 
-# DBTITLE 1,check size of column feature
 img_features_df.select(size('features')).limit(1).show()
 
 # COMMAND ----------
@@ -107,7 +104,6 @@ img_features_df.select(size('features')).limit(1).show()
 
 # COMMAND ----------
 
-# DBTITLE 1,convert img_features_df to pandasDF
 img_features_pdf=img_features_df.toPandas()
 
 # COMMAND ----------
@@ -117,14 +113,12 @@ img_features_pdf=img_features_df.toPandas()
 
 # COMMAND ----------
 
-# DBTITLE 1,get m_samples and n_features
 n=len(img_features_pdf.features[0])
 m=img_features_pdf.shape[0]
 print(n,m)
 
 # COMMAND ----------
 
-# DBTITLE 1,reshape
 features_mat=np.concatenate(img_features_pdf.features.values,axis=0).reshape(m,n)
 features_mat.shape
 
@@ -136,7 +130,6 @@ features_mat.shape
 
 # COMMAND ----------
 
-# DBTITLE 1,Define Umap parameters - for interactive exploration
 dbutils.widgets.text(name='n_neighbors',defaultValue='15')
 dbutils.widgets.text(name='min_dist',defaultValue='0.1')
 
@@ -159,9 +152,11 @@ import umap
 n_neighbors=int(dbutils.widgets.get('n_neighbors'))
 min_dist=float(dbutils.widgets.get('min_dist'))
 
+# run_name = "UMAP-embedding"
+
 # COMMAND ----------
 
-# DBTITLE 1,Define Umap get_embeddings function
+# DBTITLE 1,Define Umap embedding function
 def get_embeddings(features_mat, n_neighbors, min_dist, n_components=2, run_name=None):
     params = {
         'n_neighbors': n_neighbors,
@@ -177,8 +172,46 @@ def get_embeddings(features_mat, n_neighbors, min_dist, n_components=2, run_name
     else:
         for key, value in mapper.get_params().items():
             mlflow.log_param(key, value)
+
+    # mlflow.end_run()
     
     return mapper
+
+
+# def get_embeddings(features_mat, n_neighbors, min_dist, n_components=2, run_name=None):
+#     params = {
+#         'n_neighbors': n_neighbors,
+#         'min_dist': min_dist,
+#         'n_components': n_components,
+#     }
+#     mapper = umap.UMAP(**params).fit(features_mat)
+
+#     if run_name:
+#         with mlflow.start_run(run_name=run_name) as run:
+#             for key, value in mapper.get_params().items():
+#                 mlflow.log_param(key, value)
+#             run_id = run.info.run_id
+#     else:
+#         with mlflow.start_run() as run:
+#             for key, value in mapper.get_params().items():
+#                 mlflow.log_param(key, value)
+#             run_id = run.info.run_id
+
+#     return mapper, run_id. ## can't return more than 1 variable...
+
+# COMMAND ----------
+
+# def get_embeddings(features_mat,n_neighbors=n_neighbors,min_dist=min_dist,n_components=2):
+#   params ={'n_neighbors':n_neighbors,
+#                'min_dist':min_dist,
+#                'n_components':n_components,
+#           }
+#   mapper = umap.UMAP(**params).fit(features_mat)
+
+#   mlflow.end_run()
+#   for key,value in mapper.get_params().items():
+#     mlflow.log_param(key,value)
+#   return(mapper)
 
 # COMMAND ----------
 
@@ -196,8 +229,13 @@ if torch.cuda.is_available():
 
 # DBTITLE 1,Process 2D embeddings
 mlflow.end_run()
-
+# mpper_2d = get_embeddings(features_mat, n_components=2, n_neighbors=n_neighbors, min_dist=min_dist)
 mpper_2d = get_embeddings(features_mat, n_components=2, n_neighbors=n_neighbors, min_dist=min_dist, run_name="UMAP-2Dembedding")
+
+# COMMAND ----------
+
+# mlflow.end_run()
+# mpper_2d, mpper_2d_run_id = get_embeddings(features_mat, n_components=2, n_neighbors=n_neighbors, min_dist=min_dist, run_name="UMAP-2Dembedding")
 
 # COMMAND ----------
 
@@ -228,7 +266,7 @@ fig.show()
 
 # COMMAND ----------
 
-# DBTITLE 1,log the 2D plot in mlflow run + UC Volumes
+# DBTITLE 1,log the plot in mlflow + UC Volumes
 from mlflow.tracking import MlflowClient
 
 # Define the path to the Unity Catalog volume
@@ -237,7 +275,7 @@ uc_volume_path = f'/Volumes/{catalog_name}/{project_name}/files/umap2d.html'
 # Save the plot to the UC volume
 dbutils.fs.put(uc_volume_path, fig.to_html(), overwrite=True)
 
-## Get the most recent run ID in with settings['experiment_name'] -- it should be for run_name: "UMAP-2Dembedding"
+## Get the most recent run ID with the name "UMAP-2Dembedding"
 client = MlflowClient()
 experiment_id = mlflow.get_experiment_by_name(settings['experiment_name']).experiment_id
 runs = client.search_runs(experiment_id, order_by=["start_time desc"], max_results=1)
@@ -245,6 +283,11 @@ run_id = runs[0].info.run_id
 
 ## Log the artifact to the most recent run using MlflowClient
 client.log_artifact(run_id, uc_volume_path, 'umap2d-plot')
+
+
+## Log the artifact to the most recent mpper_2d_run_id using MlflowClient
+# client = MlflowClient()
+# client.log_artifact(mpper_2d_run_id, uc_volume_path, 'umap2d-plot')
 
 # COMMAND ----------
 
@@ -255,7 +298,7 @@ client.log_artifact(run_id, uc_volume_path, 'umap2d-plot')
 
 # DBTITLE 1,Process 3D embeddings
 mlflow.end_run()
-
+# mpper_3d=get_embeddings(features_mat,n_components=3, n_neighbors=n_neighbors, min_dist=min_dist)
 mpper_3d = get_embeddings(features_mat, n_components=3, n_neighbors=n_neighbors, min_dist=min_dist, run_name="UMAP-3Dembedding")
 
 # COMMAND ----------

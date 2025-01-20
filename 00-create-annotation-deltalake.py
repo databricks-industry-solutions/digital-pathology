@@ -39,17 +39,12 @@ import json
 import os
 from pprint import pprint
 
-# project_name='digital-pathology' #original
-# project_name='digital_pathology' #updated with `_`
-# project_name2use = f"{project_name}".replace('-','_') ## for UC
-
 catalog_name = 'dbdemos'
 project_name='digital_pathology' 
 
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)  
 
-# config_path=f"/Volumes/mmt/{project_name2use}/files/{user_uid}_{project_name2use}_configs.json"
 config_path=f"/Volumes/{catalog_name}/{project_name}/files/{user_uid}_{project_name}_configs.json"
 
 try:
@@ -79,8 +74,10 @@ destination_path = f"{BASE_PATH}/openslide-tools.sh" #'/Volumes/dbdemos/digital_
 # Ensure the destination directory exists
 os.makedirs(os.path.dirname(destination_path), exist_ok=True)
 
-# Use subprocess to copy the file
-subprocess.run(["cp", source_path, destination_path], check=True)
+# Use subprocess to copy the file -- moved this to ./config/0-config so this should have been completed
+# subprocess.run(["cp", source_path, destination_path], check=True)
+
+# We check that the file was copied successfully by displaying the contents of the destination file
 subprocess.run(["cat", destination_path], check=True)
 
 # COMMAND ----------
@@ -140,9 +137,6 @@ print(dbutils.fs.head(f'{ANNOTATION_PATH}/tumor_train.txt'))
 # COMMAND ----------
 
 # DBTITLE 1,Import pyspark.sql functions and types
-# import pyspark.sql.functions as F
-# from pyspark.sql.types import StructType, StringType, IntegerType
-
 from pyspark.sql import functions as F, types as T
 
 # COMMAND ----------
@@ -201,9 +195,5 @@ display(dbutils.fs.ls(f'{ANNOTATION_PATH}/delta/patch_labels'))
 # COMMAND ----------
 
 # DBTITLE 1,Write data also as delta table to Catalog.Schema
-## save as delta Table as well 
+## save as delta Table in UC as well 
 df_coords.write.format('delta').mode('overWrite').option("mergeSchema", "true").saveAsTable(f"{BASE_PATH.removeprefix('/Volumes/').removesuffix('/files').replace('/','.')}.patch_labels")
-
-# COMMAND ----------
-
-

@@ -7,13 +7,11 @@
 # MAGIC **Steps**
 # MAGIC 1. Simply attach this notebook to a cluster and hit Run-All for this notebook. A multi-step job and the clusters used in the job will be created for you and hyperlinks are printed on the last block of the notebook. 
 # MAGIC
-# MAGIC 2. For clusters with **`*_w_init` suffixes**: Check cluster's Advance Options to make sure the the `openslide-tools.sh` workspace file path is added to the `Init scripts` -- **_Do this before you run the notebooks or workflow_** (see step 3.)
+# MAGIC 2. Run the accelerator notebooks: Feel free to explore the multi-step job page and **run the Workflow**, or **run the notebooks interactively** with the cluster to see how this solution accelerator executes. 
 # MAGIC
-# MAGIC 3. Run the accelerator notebooks: Feel free to explore the multi-step job page and **run the Workflow**, or **run the notebooks interactively** with the cluster to see how this solution accelerator executes. 
-# MAGIC
-# MAGIC     3a. **Run the Workflow**: Navigate to the Workflow link and hit the `Run Now` 💥. 
+# MAGIC     2a. **Run the Workflow**: Navigate to the Workflow link and hit the `Run Now` 💥. 
 # MAGIC   
-# MAGIC     3b. **Run the notebooks interactively**: Attach the notebook with the cluster(s) created and execute as described in the `job_json['tasks']` below.
+# MAGIC     2b. **Run the notebooks interactively**: Attach the notebook with the cluster(s) created and execute as described in the `job_json['tasks']` below.
 # MAGIC
 # MAGIC **Prerequisites** 
 # MAGIC 1. You need to have cluster creation permissions in this workspace.
@@ -27,31 +25,44 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,original code
-#### (original) -- this previous approach now has a recent code-change / PR induced Error
+#### (original)
 
-## Install util packages (separate cell)
+## Install util packages 
 # %pip install git+https://github.com/databricks-academy/dbacademy@v1.0.13 git+https://github.com/databricks-industry-solutions/notebook-solution-companion@safe-print-html pyspark>=3.1.2 --quiet --disable-pip-version-check
+
 # dbutils.library.restartPython()
 
-
-## Import solution accelerator companion modules/tools (separate cell)
+## Import solution accelerator companion modules/tools
 # from solacc.companion import NotebookSolutionCompanion
 # nsc = NotebookSolutionCompanion()
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC **Jan2025_Update NB:** Recent updates to repository dependency `https://github.com/databricks-industry-solutions/notebook-solution-companion@safe-print-html` broke the existing code process. Hidden/Commented code reflects prior version.    
-# MAGIC    
-# MAGIC **Workaround Solution Provided:** ` solacc/companion/_init_.py` from a previous [`Pull Request`](https://github.com/databricks-industry-solutions/notebook-solution-companion/blob/f7e381d77675b29c2d3f9d377a528ceaf2255f23/solacc/companion/__init__.py) is copied to  `solacc_companion_init` in the workspace and `%run` to access `NotebookSolutionCompanion()` 
+# Install util packages 
+%pip install git+https://github.com/databricks-academy/dbacademy@v1.0.13 git+https://github.com/databricks-industry-solutions/notebook-solution-companion@safe-print-html pyspark>=3.1.2 --quiet --disable-pip-version-check
+
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# DBTITLE 1,install utils without solacc companion via git branch
-# MAGIC %pip install git+https://github.com/databricks-academy/dbacademy@v1.0.13 pyspark>=3.1.2 databricks-sdk>=0.32.0 --quiet --disable-pip-version-check
-# MAGIC
-# MAGIC dbutils.library.restartPython()
+# Import solution accelerator companion modules/tools
+from solacc.companion import NotebookSolutionCompanion
+nsc = NotebookSolutionCompanion()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC **NB:** Recent updates to repository dependency `https://github.com/databricks-industry-solutions/notebook-solution-companion@safe-print-html` broke the existing code process. Hidden/Commented code reflects prior version.    
+# MAGIC    
+# MAGIC Workaround Solution: ` solacc/companion/_init_.py` from a previous [`Pull Request`](https://github.com/databricks-industry-solutions/notebook-solution-companion/blob/f7e381d77675b29c2d3f9d377a528ceaf2255f23/solacc/companion/__init__.py) is copied to  `solacc_companion_init` in the workspace and `%run` to access `NotebookSolutionCompanion()` 
+
+# COMMAND ----------
+
+# DBTITLE 1,install utils without solacc companion
+# %pip install git+https://github.com/databricks-academy/dbacademy@v1.0.13 pyspark>=3.1.2 --quiet --disable-pip-version-check
+%pip install git+https://github.com/databricks-academy/dbacademy@v1.0.13 pyspark>=3.1.2 databricks-sdk>=0.32.0 --quiet --disable-pip-version-check
+
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -83,7 +94,7 @@ suffix
 
 # DBTITLE 1,Define Workflow job tasks and cluster resources
 job_json = {
-            "name": f"[RUNNER]_digital_pathology_{suffix}", ## update where appropriate
+            "name": f"[RUNNER]_digital_pathology_{suffix}_test_githtmlbranch", ## update where appropriate
             "timeout_seconds": 28800,
             "max_concurrent_runs": 1,
             "tags": {
@@ -262,7 +273,7 @@ job_json = {
                             {
                                 "workspace": {
                                     "destination": f"{nsc.solacc_path}/openslide-tools.sh"
-                                }#,
+                                },
                                 # "volumes":{
                                 #     "destination": "/Volumes/dbdemos/digital_pathology/files/openslide-tools.sh" 
                                 #            }
@@ -280,7 +291,7 @@ job_json = {
                             {
                                 "workspace": {
                                     "destination": f"{nsc.solacc_path}/openslide-tools.sh"
-                                }#,
+                                },
                                 # "volumes":{
                                 #     "destination": "/Volumes/dbdemos/digital_pathology/files/openslide-tools.sh" 
                                 #            }
@@ -650,9 +661,16 @@ job_json = {
 
 # COMMAND ----------
 
+# DBTITLE 1,Deploy Workflow Pipeline -- test git_htmlbranch
+dbutils.widgets.dropdown("run_job", "False", ["True", "False"])
+run_job = dbutils.widgets.get("run_job") == "True"
+nsc.deploy_compute(job_json, run_job=run_job)
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC #### Make sure that task compute with requires the includes init script path to openslide-tools.sh where it is required 
-# MAGIC - Run the following deploy code and check created compute resource's Advance Options that `openslide-tools.sh` is added to `Init Scripts`
+# MAGIC - Run the following deploy code and check created compute resource's Advance Options 
 # MAGIC
 # MAGIC [insert images]
 
