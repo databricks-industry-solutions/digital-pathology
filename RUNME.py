@@ -36,13 +36,6 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,PR_env_variables
-import os
-os.environ['DATABRICKS_TOKEN'] = dbutils.secrets.get('mmt','databricks-token')
-os.environ['DATABRICKS_HOST'] = 'https://e2-demo-field-eng.cloud.databricks.com/'
-
-# COMMAND ----------
-
 # DBTITLE 1,original code
 #### (original) -- this previous approach now has a recent code-change / PR induced Error
 
