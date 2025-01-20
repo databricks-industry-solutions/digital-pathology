@@ -5,7 +5,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Ingest annotation data to lakehouse
+# MAGIC # Ingest annotation data to Unity Catalog
 # MAGIC In this section we load pre-processed annotation files - tabular data containing slide name, `x`,`y` coordinates of the tile and corresponding label (`0` for no metastasis and `1` for metastasis).
 # MAGIC We use pre-processed annotations from [BaiduResearch](https://github.com/baidu-research/NCRF). This repository, contains the coordinates of pre-sampled patches used in [the paper](https://openreview.net/forum?id=S1aY66iiM) which uses conditional random fields in conjunction with CNNs to achieve the highest accuracy for detecting metastasis on WSI images:
 # MAGIC
@@ -35,6 +35,7 @@ catalog_name, project_name
 
 # COMMAND ----------
 
+# DBTITLE 1,Retrieve Configs
 import json
 import os
 from pprint import pprint
@@ -56,6 +57,7 @@ except FileNotFoundError:
 
 # COMMAND ----------
 
+# DBTITLE 1,Set paths
 WSI_PATH = settings['data_path']
 BASE_PATH = settings['base_path']
 IMG_PATH = settings['img_path']
@@ -151,6 +153,7 @@ schema = (
 
 # COMMAND ----------
 
+# DBTITLE 1,Read files from UC
 # load tumor patch coordinates and assign label = 0
 df_coords_normal = spark.read.csv(f'{ANNOTATION_PATH}/normal_train.txt', schema=schema).withColumn('label', F.lit(0))
 
@@ -174,8 +177,8 @@ display(df_coords. groupby('label').count())
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 3. Write dataframes to delta
-# MAGIC Now we write the resulting dataframe to deltalake. Later we use this dataset to join annotaions with slides and genereated patches.
+# MAGIC ## 3. Write dataframes to Unity Catalog
+# MAGIC Now we write the resulting dataframe to Unity Catalog as delta files/tables. Later we use this dataset to join annotaions with slides and genereated patches.
 
 # COMMAND ----------
 

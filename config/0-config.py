@@ -3,8 +3,7 @@
 # MAGIC This notebook is to setup your intial configuration for your project.   
 # MAGIC **_NB: you may want to specify a different `catalog_name` to avoid overwriting or using the same Unity Catalog as other users testing the same solution accelerator._**   
 # MAGIC You may only need to run this once and after that project configuration can be shared with other notebooks.   
-# MAGIC This notebook is executed from by `01-create-annotation-deltalake`.
-# MAGIC
+# MAGIC This notebook is executed by `01-create-annotation-UC`.
 # MAGIC
 
 # COMMAND ----------
@@ -12,7 +11,7 @@
 # DBTITLE 1,Interactive Cluster setup info.
 # MAGIC %md
 # MAGIC **Suggested Interactive Cluster Info.**  
-# MAGIC If you choose to run the notebooks separately and interactively before using the RUNME notebook here are some recommended cluster settings for setting up interactive clusters.   
+# MAGIC You can If you choose to run the notebooks separately and interactively by seeing up compute resources using the [RUNME]($../RUNME) notebook. Alternatively, here are some recommended cluster settings for setting up interactive clusters without using the [RUNME]($../RUNME) notebook to set up compute.   
 # MAGIC
 # MAGIC ###### SINGLE NODE
 # MAGIC - 14.3.x-cpu-ml-scala2.12 | Unity Catalog | i3.4xlarge
@@ -183,7 +182,7 @@ class SolAccUtil:
 
 # COMMAND ----------
 
-# DBTITLE 1,Check CLASS: project_utils
+# DBTITLE 1,Create from CLASS: project_utils
 project_utils = SolAccUtil(
     project_name=project_name,
     max_n_patches=max_n_patches  # Replace with the appropriate value
