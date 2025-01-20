@@ -1,8 +1,17 @@
 # Databricks notebook source
-# MAGIC %md 
+# MAGIC %md
 # MAGIC ## RUNME
-# MAGIC This notebook sets up the companion cluster(s) to run the solution accelerator. It also creates the Workflow to illustrate the order of execution. Happy exploring! 
+# MAGIC This notebook sets up the companion cluster(s) to run the solution accelerator. It also creates the Workflow: `[RUNNER]_digital_pathology_{user_initials}{YYYYMMDD}` to illustrate the order of execution. Happy exploring! 
 # MAGIC 🎉
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ![RUNME_pipeline_setup](/Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/imgs/RUNME_pipeline_setup.png)
+
+# COMMAND ----------
+
+# MAGIC %md 
 # MAGIC
 # MAGIC **Steps**
 # MAGIC 1. Simply attach this notebook to a cluster and hit Run-All for this notebook. A multi-step job and the clusters used in the job will be created for you and hyperlinks are printed on the last block of the notebook. 
@@ -24,11 +33,6 @@
 # MAGIC 1. The pipelines, workflows and clusters created in this script are not user-specific. Keep in mind that rerunning this script again after modification resets them for other users too.
 # MAGIC
 # MAGIC 2. If the job execution fails, please confirm that you have set up other environment dependencies as specified in the accelerator notebooks. Accelerators may require the user to set up additional cloud infra or secrets to manage credentials. 
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ![RUNME_pipeline_setup](/Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/imgs/RUNME_pipeline_setup.png)
 
 # COMMAND ----------
 
@@ -300,8 +304,10 @@ job_json = {
 # COMMAND ----------
 
 # DBTITLE 1,Deploy Workflow Pipeline
+## Define run_job boolean Widget when deploy_compute() is executed; by default resources will be set up without running job pipeline:
 dbutils.widgets.dropdown("run_job", "False", ["True", "False"])
 run_job = dbutils.widgets.get("run_job") == "True"
+
 nsc.deploy_compute(job_json, run_job=run_job)
 
 # COMMAND ----------
@@ -327,7 +333,7 @@ nsc.deploy_compute(job_json, run_job=run_job)
 # MAGIC     <img src="/Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/imgs/gpu_cluster_w_init_checkAdvOptions.png" alt="gpu_cluster_w_init_checkAdvOptions" width="800" height="600">
 # MAGIC </div> -->
 # MAGIC
-# MAGIC These checks wrt `openslide-tools.sh` init script help ensure that the tasks that require the `openslide` dependencies will complete successfully when workflow is run:    
+# MAGIC These checks with regards to adding the workspace/volumes `openslide-tools.sh` init script path help ensure that the tasks that require the `openslide` dependencies will complete successfully when workflow is run:    
 # MAGIC
 # MAGIC <!-- <img src="/Workspace/Users/may.merkletan@databricks.com/REPOs/digital-pathology/imgs/CheckEachTaskNCompute_cpu_cluster_w_init_checkAdvOptions.png" alt="CheckEachTaskNCompute_cpu_cluster_w_init_checkAdvOptions" width="600" height="400"> -->
 # MAGIC
