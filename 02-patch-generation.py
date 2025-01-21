@@ -11,18 +11,35 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 0. Initial Configuration
+# MAGIC ## 0. Set & Retrieve Configuration
 
 # COMMAND ----------
 
+# DBTITLE 1,[RUNME clusters config specifies cluster lib]
+## uncomment below to run this nb separately from RUNME nb if openslide-python hasn't been installed
+# %pip install openslide-python
+# dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# DBTITLE 1,cluster init file: openslide-tools.sh
+## uncomment below to run this nb separately from RUNME nb if openslide-tools hasn't been installed
+# !apt-get install -y openslide-tools
+
+# COMMAND ----------
+
+# DBTITLE 1,Retrieve Config
 import json
 import os
 from pprint import pprint
 
-project_name='digital-pathology'
+catalog_name = 'dbdemos'
+project_name='digital_pathology' 
+
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)
-config_path=f"/dbfs/FileStore/{user_uid}_{project_name}_configs.json"
+
+config_path=f"/Volumes/{catalog_name}/{project_name}/files/{user_uid}_{project_name}_configs.json"
 
 try:
   with open(config_path,'rb') as f:
@@ -44,7 +61,9 @@ ANNOTATION_PATH = BASE_PATH+"/annotations"
 # DBTITLE 1,define parameters
 PATCH_SIZE=settings['patch_size']
 LEVEL=settings['level']
-MAX_N_PATCHES=settings['max_n_patches'] # We set this value to limit the number of patches generated. You can modify this to process more/less patches
+MAX_N_PATCHES=settings['max_n_patches'] 
+
+# We set this value to limit the number of patches generated. You can modify this to process more/less patches
 
 # COMMAND ----------
 
@@ -63,10 +82,14 @@ MAX_N_PATCHES=settings['max_n_patches'] # We set this value to limit the number 
 
 # COMMAND ----------
 
-# DBTITLE 1,Load annotations
+# DBTITLE 1,Load patch_labels
 from pyspark.sql.functions import *
 
-coordinates_df = spark.read.load(f'{ANNOTATION_PATH}/delta/patch_labels')
+## read from UC Volumes
+# coordinates_df = spark.read.load(f'{ANNOTATION_PATH}/delta/patch_labels')
+
+## read from UC table
+coordinates_df = spark.read.table(f"{catalog_name}.{project_name}.patch_labels")
 
 df_patch_info = (
   spark.createDataFrame(dbutils.fs.ls(WSI_PATH))
@@ -82,6 +105,7 @@ df_patch_info = (
 
 # COMMAND ----------
 
+# DBTITLE 1,N patches for processing
 print(f'there are {df_patch_info.count()} patches to process.')
 display(df_patch_info)
 
@@ -92,18 +116,25 @@ display(df_patch_info)
 
 # COMMAND ----------
 
+# DBTITLE 1,Display patches
 df_patch_info.groupBy('train_test').avg('label').display()
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## 2. Create patches from WSI images
-# MAGIC 
+# MAGIC
 # MAGIC In this step, we simply distribute the tiling process based on specified coordinates. This is achieved by applying `dist_patch_extract` defined in `PatchGenerator` class from the helper notebook, which leverages `pandas_udfs` to distribute patch extraction from openSlide
 
 # COMMAND ----------
 
+# DBTITLE 1,set spark maxRecordsPerBatch config
 spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", "1024")
+
+# COMMAND ----------
+
+# DBTITLE 1,check path
+PatchGenerator.__doc__, IMG_PATH
 
 # COMMAND ----------
 
@@ -121,21 +152,24 @@ dataset_df = (
 
 # COMMAND ----------
 
-df_patch_info.repartition(64).withColumn('img_path',concat_ws('/',lit(IMG_PATH),col('train_test'),col('label'))).display()
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC Note that in the above command we simply created the spark execution plan and no action has been invoked yet. The following command will invoke and action which is to create a dataframe of extracted patches.  
 
 # COMMAND ----------
 
+# DBTITLE 1,Call the execution of mapinpandas
+# display(dataset_df)
+
 dataset_df.count()
 
+# this typically takes between 10-25mins depending on your cluster config.
+
 # COMMAND ----------
 
+# DBTITLE 1,Repartition and Display
+df_patch_info.repartition(64).withColumn('img_path',concat_ws('/',lit(IMG_PATH),col('train_test'),col('label'))).display()
+
+# COMMAND ----------
+
+# DBTITLE 1,Display the images using the path info
 spark.read.format('binaryFile').load(f'{IMG_PATH}/*/*/*.jpg').withColumn('sid',regexp_extract('path','(\\w+)_(\\d+)', 0)).display()
-
-# COMMAND ----------
-
-

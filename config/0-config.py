@@ -1,60 +1,136 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC This notebook is to setup your intial configuration for your project. You may only need to run this once and after that project configuration can be shared with other notebooks.
-# MAGIC This notebook is executed from by `01-create-annotation-deltalake`.
+# MAGIC This notebook is to setup your intial configuration for your project.   
+# MAGIC **_NB: you may want to specify a different `catalog_name` to avoid overwriting or using the same Unity Catalog as other users testing the same solution accelerator._**   
+# MAGIC You may only need to run this once and after that project configuration can be shared with other notebooks.   
+# MAGIC This notebook is executed by `01-create-annotation-UC`.
+# MAGIC
 
 # COMMAND ----------
 
-dbutils.widgets.text('project_name','digital-pathology')
+# DBTITLE 1,Interactive Cluster setup info.
+# MAGIC %md
+# MAGIC **Suggested Interactive Cluster Info.**  
+# MAGIC You can If you choose to run the notebooks separately and interactively by seeing up compute resources using the [RUNME]($../RUNME) notebook. Alternatively, here are some recommended cluster settings for setting up interactive clusters without using the [RUNME]($../RUNME) notebook to set up compute.   
+# MAGIC
+# MAGIC ###### SINGLE NODE
+# MAGIC - 14.3.x-cpu-ml-scala2.12 | Unity Catalog | i3.4xlarge
+# MAGIC    - 1 Driver -- 122 GB Memory, 16 Cores 
+# MAGIC
+# MAGIC - 14.3.x-gpu-ml-scala2.12 | Unity Catalog | g4dn.4xlarge
+# MAGIC    - 2-8 Workers | 128-512 GB Memory| 32-128 Cores
+# MAGIC    - 1 Driver | 64 GB Memory, 16 Cores | Runtime
+# MAGIC
+# MAGIC
+# MAGIC ###### NB: Remember to include init scripts path (e.g. from Workspace) in Cluster Advance Options :  
+# MAGIC     - /Workspace/Users/<user-email>/<repoORdirectory-location>/digital-pathology/openslide-tools.sh
+
+# COMMAND ----------
+
+# DBTITLE 1,Reset UC catalog-schema
+# %sql
+# -- if required uncomment to reset UC schema
+# DROP SCHEMA IF EXISTS dbdemos.`digital-pathology` CASCADE;
+
+# COMMAND ----------
+
+# DBTITLE 1,Clear widgets if updates/reset required
+## if required uncomment to reset widgets
+# dbutils.widgets.removeAll()
+
+# COMMAND ----------
+
+# DBTITLE 1,Set nb parameters with widgets
+dbutils.widgets.text('catalog_name','dbdemos') ## update to use specific catalog if needed
+dbutils.widgets.text('project_name','digital_pathology') ## using underscore for UC is preferred | updated project_data_paths as well to match
 dbutils.widgets.dropdown('overwrite_old_patches','no',['yes','no'])
 dbutils.widgets.text('max_n_patches','500')
 
 # COMMAND ----------
 
-# DBTITLE 0,add widgets
-import mlflow
+# DBTITLE 1,Get parameter values from widgets
+catalog_name=dbutils.widgets.get('catalog_name')
 project_name=dbutils.widgets.get('project_name')
 overwrite=dbutils.widgets.get('overwrite_old_patches')
 max_n_patches=int(dbutils.widgets.get('max_n_patches'))
 
 # COMMAND ----------
 
-# DBTITLE 1,specify path to raw data for each project
-project_data_paths = {'digital-pathology':"/databricks-datasets/med-images/camelyon16/",'omop-cdm-100K':"s3://hls-eng-data-public/data/rwe/all-states-90K/","omop-cdm-10K":"s3://hls-eng-data-public/data/synthea/",'psm':"s3://hls-eng-data-public/data/rwe/dbx-covid-sim/"}
+# DBTITLE 1,Check widget params
+# print(f"Catalog Name: {catalog_name}")
+# print(f"Project Name: {project_name}")
+# print(f"Overwrite Old Patches: {overwrite}")
+# print(f"Max Number of Patches: {max_n_patches}")
 
 # COMMAND ----------
 
-# DBTITLE 1,class for project setup
+# DBTITLE 1,Create Catalog.Schema if NOT EXIST
+# Create the catalog and schema if they don't exist
+spark.sql(f"CREATE CATALOG IF NOT EXISTS {catalog_name}")
+spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{project_name}")
+
+# Create a managed volume
+spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog_name}.{project_name}.files")
+
+# Optionally, create an external volume
+# spark.sql("CREATE EXTERNAL VOLUME IF NOT EXISTS dbdemos.digital_pathology.files LOCATION 's3://your-bucket-path/digital_pathology/files'")
+
+# COMMAND ----------
+
+# DBTITLE 1,Specify path to raw data for each project
+project_data_paths = {'digital_pathology':"/databricks-datasets/med-images/camelyon16/", 
+                      'omop-cdm-100K':"s3://hls-eng-data-public/data/rwe/all-states-90K/",
+                      "omop-cdm-10K":"s3://hls-eng-data-public/data/synthea/",
+                      'psm':"s3://hls-eng-data-public/data/rwe/dbx-covid-sim/"
+                     }
+
+# COMMAND ----------
+
+# DBTITLE 1,Specify Config Class SolAccUtil for project setup
 import mlflow
 import os
 import hashlib
+
 class SolAccUtil:
-  def __init__(self,project_name,max_n_patches=max_n_patches,patch_size=299,level=0,data_path=None,base_path=None):
+  def __init__(self,project_name,max_n_patches=max_n_patches,
+               patch_size=299,level=0,data_path=None,base_path=None):
+    
     user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
-    project_name = project_name.strip().replace(' ','-')
     user_uid = abs(hash(user)) % (10 ** 5)
+    
+    catalog = catalog_name # specify & use specific catalog (above) if needed
+
     if base_path!=None:
       base_path=base_path
-    else:
-      base_path = os.path.join('/home',user,project_name)
+    else:            
+      base_path = f"/Volumes/{catalog}/{project_name}/files"
       
     if data_path != None:
       data_path=data_path
     else:
-      data_path=project_data_paths[project_name]
+      data_path=project_data_paths[project_name] ## keep_same/original
      
     dbutils.fs.mkdirs(base_path)
-    delta_path=os.path.join(base_path,project_name,'delta')
-    experiment_name=os.path.join('/Users',user,project_name)
+    delta_path= f"/Volumes/{catalog}/{project_name}/files/delta"
     
+    experiment_name=os.path.join('/Users',user,project_name) ## update if needed
+
+    ## to-check wrt model registration to UC params to add? 
     if not mlflow.get_experiment_by_name(experiment_name):
       experiment_id = mlflow.create_experiment(experiment_name)
       experiment = mlflow.get_experiment(experiment_id)
     else:
       experiment = mlflow.get_experiment_by_name(experiment_name)
+      
     self.settings = {}
     self.settings['max_n_patches']=max_n_patches
-    self.settings['img_path']=f'/ml/{project_name}-{user_uid}'     
+    
+    self.settings['img_path']=f'/Volumes/{catalog}/{project_name}/files/imgs' 
+
+    ## include these -- to update use in nbs 
+    self.settings['catalog']=catalog
+    self.settings['project_name']=project_name
+
     self.settings['base_path']=base_path
     self.settings['delta_path']=delta_path
     self.settings['data_path']=data_path
@@ -71,7 +147,8 @@ class SolAccUtil:
     import requests
     fname=url.split('/')[-1]
     r = requests.get(url)
-    out_file=f'/dbfs{dest_path}/{fname}'
+    out_file=f'{dest_path}/{fname}'
+
     print('-*-'*20)
     print(f'downloading file {fname} to {out_file}')
     print('-*-'*20)
@@ -80,8 +157,8 @@ class SolAccUtil:
       print(f'unpacking file {fname} into {dest_path}')
       import tarfile
     # open file
-      file = tarfile.open(os.path.join('/dbfs',dest_path,fname))
-      file.extractall(os.path.join('/dbfs',dest_path))
+      file = tarfile.open(os.path.join('dbfs:',dest_path,fname))
+      file.extractall(os.path.join('dbfs:',dest_path))
       file.close()
     
   def print_info(self):
@@ -101,28 +178,55 @@ class SolAccUtil:
       print('*'*100)
       display(files)
 
-# COMMAND ----------
-
-# DBTITLE 1,define project settings
-project_utils = SolAccUtil(project_name=project_name)
+    return self
 
 # COMMAND ----------
 
-# DBTITLE 1,write configurations for later access
+# DBTITLE 1,Create from CLASS: project_utils
+project_utils = SolAccUtil(
+    project_name=project_name,
+    max_n_patches=max_n_patches  # Replace with the appropriate value
+)
+
+# COMMAND ----------
+
+# DBTITLE 1,Write configurations for later access
 import json 
-with open(f"/dbfs/FileStore/{project_utils.settings['user_uid']}_{project_name}_configs.json",'w') as f:
+
+## using UC Volumes 
+with open(f"/Volumes/{catalog_name}/{project_utils.settings['project_name']}/files/{project_utils.settings['user_uid']}_{project_utils.settings['project_name'] }_configs.json",'w') as f:
   f.write(json.dumps(project_utils.settings,indent=4))
 f.close()
 
 # COMMAND ----------
 
-# DBTITLE 1,display project settings
-project_utils.print_info()
-print('use project_utils for access to settings')
+# DBTITLE 1,Copy init script to Volumes path for use later
+import os
+import subprocess
+
+# Define the source and destination paths
+source_path = "openslide-tools.sh"
+destination_path = f"{project_utils.settings['base_path']}/openslide-tools.sh" #'/Volumes/dbdemos/digital_pathology/files/openslide-tools.sh'
+
+# Ensure the destination directory exists
+os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+
+# Use subprocess to copy the file
+subprocess.run(["cp", source_path, destination_path], check=True)
+# subprocess.run(["cat", destination_path], check=True)
 
 # COMMAND ----------
 
-# DBTITLE 1,existing patches
+# DBTITLE 1,Display project settings
+## project_utils.print_info()
+# print('use project_utils for access to settings')
+
+## Check Settings in project_utils
+# project_utils.settings
+
+# COMMAND ----------
+
+# DBTITLE 1,Existing patches
 if overwrite=='yes':
   try:
     dbutils.fs.rm(project_utils.settings['img_path'],recurse=True)
