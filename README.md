@@ -10,7 +10,7 @@ The tumor proliferation speed or tumor growth is an important biomarker for pred
 One of the main challenges however for automating this task, is the fact that whole slide images are rather large. WSI images can vary anywhere between 0.5 to 3.5GB in size, and that can slow down the image preprocessing step which is necessary for any downstream ML application.
 
 
-In this solution accelerator, we walk you through a step-by-step process to use databricks capabilities to perform image segmentation and pre-processing on WSI and train a binary classifier that produces a metastasis probability map over a whole slide image (WSI).
+In this solution accelerator, we walk you through a step-by-step process to use databricks capabilities to perform image tiling and pre-processing on WSI and train a binary classifier that produces a metastasis probability map over a whole slide image (WSI).
 
 <br>
 <img src="https://hls-eng-data-public.s3.amazonaws.com/img/slide_heatmap.png" alt="logo" width=60% /> 
