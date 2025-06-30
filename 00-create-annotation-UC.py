@@ -40,8 +40,8 @@ import json
 import os
 from pprint import pprint
 
-catalog_name = 'dbdemos'
-project_name='digital_pathology' 
+catalog_name = 'dbdemos' ## update this to your catalog name
+project_name='digital_pathology' ## update this to your project_name
 
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)  
