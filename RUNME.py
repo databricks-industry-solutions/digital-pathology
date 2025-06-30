@@ -54,6 +54,8 @@
 # MAGIC **Jan2025_Update NB:** Recent updates to repository dependency `https://github.com/databricks-industry-solutions/notebook-solution-companion@safe-print-html` broke the existing code process. Hidden/Commented code reflects prior version.    
 # MAGIC    
 # MAGIC **Workaround Solution Provided:** ` solacc/companion/_init_.py` from a previous [`Pull Request`](https://github.com/databricks-industry-solutions/notebook-solution-companion/blob/f7e381d77675b29c2d3f9d377a528ceaf2255f23/solacc/companion/__init__.py) is copied to  `solacc_companion_init` in the workspace and `%run` to access `NotebookSolutionCompanion()` 
+# MAGIC
+# MAGIC **July2025_Update NB:** `<to document changes>`
 
 # COMMAND ----------
 
@@ -61,6 +63,15 @@
 # MAGIC %pip install git+https://github.com/databricks-academy/dbacademy@v1.0.13 pyspark>=3.1.2 databricks-sdk>=0.32.0 --quiet --disable-pip-version-check
 # MAGIC
 # MAGIC dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# DBTITLE 1,Widgets for run_job & use_existing_job
+dbutils.widgets.dropdown("run_job", "False", ["True", "False"])
+run_job = dbutils.widgets.get("run_job") == "True"
+
+dbutils.widgets.dropdown("use_existing_job", "True", ["True", "False"])
+use_existing_job = dbutils.widgets.get("use_existing_job") == "True"
 
 # COMMAND ----------
 
@@ -95,6 +106,17 @@ suffix
 databricks_instance = "https://e2-demo-field-eng.cloud.databricks.com/" #dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiUrl().get()    
 databricks_token = dbutils.secrets.get("mmt", "databricks_token") #"<your-PATorSP-token>"
 
+# Example to add a PAT/SP token to dbutils secrets using the CLI:
+# 1. Open your terminal.
+# 2. Use the Databricks CLI to create a secret scope (if not already created):
+#    databricks secrets create-scope --scope <scope-name>
+# 3. Add your token to the secret scope:
+#    databricks secrets put --scope <scope-name> --key <key-name>
+# 4. You will be prompted to enter the secret value (your PAT/SP token).
+
+# Example to add a PAT/SP token to dbutils secrets within a notebook:
+# Note: This step cannot be done directly within a notebook using dbutils.secrets API.
+# You need to use the Databricks CLI or REST API to add secrets.
 
 # For more information on setting up Personal Access Tokens (PAT) and Service Principals (SP) for authentication, refer to the Databricks documentation:
 # https://docs.databricks.com/dev-tools/api/latest/authentication.html
@@ -105,6 +127,41 @@ databricks_token = dbutils.secrets.get("mmt", "databricks_token") #"<your-PATorS
 # Documentation on how to store secrets e.g. tokens: 
 # https://docs.databricks.com/aws/en/security/secrets/
 
+# COMMAND ----------
+
+# DBTITLE 1,Example of adding PAT/SP to databricks api secrets
+import getpass
+import requests
+
+databricks_token = getpass.getpass(prompt='Please enter your Databricks token: ')
+
+# Function to add a secret to Databricks secrets store using REST API
+def add_secret_to_databricks(scope, key, secret_value, databricks_instance, databricks_token):
+    url = f"{databricks_instance}/api/2.0/secrets/put"
+    headers = {
+        "Authorization": f"Bearer {databricks_token}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "scope": scope,
+        "key": key,
+        "string_value": secret_value
+    }
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        print("Secret added successfully.")
+    else:
+        print(f"Failed to add secret: {response.status_code} - {response.text}")
+
+# Prompt user for scope and key
+scope = input("Enter the secret scope: ")
+key = input("Enter the secret key: ")
+
+# Use the token obtained from the first prompt as the secret value
+secret_value = databricks_token
+
+# Add the secret to Databricks secrets store
+add_secret_to_databricks(scope, key, secret_value, databricks_instance, databricks_token)
 
 # COMMAND ----------
 
@@ -336,15 +393,6 @@ job_json_with_deployed_clusters = {
         }
     ]
 }
-
-# COMMAND ----------
-
-# DBTITLE 1,Widgets for run_job & use_existing_job
-dbutils.widgets.dropdown("run_job", "False", ["True", "False"])
-run_job = dbutils.widgets.get("run_job") == "True"
-
-dbutils.widgets.dropdown("use_existing_job", "True", ["True", "False"])
-use_existing_job = dbutils.widgets.get("use_existing_job") == "True"
 
 # COMMAND ----------
 
