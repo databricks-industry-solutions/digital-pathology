@@ -6,12 +6,17 @@
 
 # MAGIC %md
 # MAGIC # Distributed feature extraction
-# MAGIC In this notebook we use spark's `pandas_udfs` to efficiently distribute feature extraction process. The extracted features are then can be used to visually inspect the structure of extracted patches.
+# MAGIC In this notebook we use spark's `pandas_udfs` to efficiently distribute feature extraction process. The extracted features are then can be used to visually inspect the structure of extracted patches.   
+# MAGIC <br>
 # MAGIC
+# MAGIC <img src="https://viso.ai/wp-content/uploads/2024/04/inceptionv3-1.png"> 
+# MAGIC <!-- https://viso.ai/deep-learning/googlenet-explained-the-inception-model-that-won-imagenet/ -->
 # MAGIC
-# MAGIC <img src="https://cloud.google.com/tpu/docs/images/inceptionv3onc--oview.png">
+# MAGIC <!-- <img src="https://cloud.google.com/tpu/docs/images/inceptionv3onc--oview.png">   -->
+# MAGIC <!-- papers with code site is down! -->
 # MAGIC
 # MAGIC We use embeddings based on a pre-trained deep neural network (in this example, [InceptionV3](https://arxiv.org/abs/1512.00567)) to extract features from each patch.
+# MAGIC
 # MAGIC Associated methods for feature extraction are defined within `./definitions` notebook in this package.
 
 # COMMAND ----------

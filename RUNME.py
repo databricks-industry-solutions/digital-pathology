@@ -19,7 +19,7 @@
 # MAGIC ### Steps
 # MAGIC 1. **Simply attach this notebook to a cluster** (e.g. ML DBR 14.3LTS is recommended) **and hit `Run-All` for this notebook** -- it will set up default parameters and cluster resources required for the multi-step workflow and start a run of the tasks as specified in the numbered notebooks. Hyperlinks to the clusters, job and run will be printed under the section **`Deploy Compute Resources + Job`**.       
 # MAGIC
-# MAGIC    a)  By default a run of the deployed job will start automatically. **You can choose to examine the resources first before initializing the job run manually from the workflow UI page.**    
+# MAGIC    1.1.  By default a run of the deployed job will start automatically. **You can choose to examine the resources first before initializing the job run manually from the workflow UI page.**    
 # MAGIC    
 # MAGIC    To do so, you update the **`deploy_digital_pathology_job`** function call specifying **`run_job=False`** before executing `Run-All` on this notebook:    
 # MAGIC         
@@ -27,18 +27,26 @@
 # MAGIC     deploy_digital_pathology_job(suffix=suffix, reuse=True, run_job=False, workspace_url=workspace_url)
 # MAGIC     ```    
 # MAGIC
-# MAGIC    b) For clusters with **`*_w_init` suffixes**:    Check cluster's Advance Options to make sure the the `openslide-tools.sh` workspace file path is added to the `Init scripts` -- _This is best checked when you DO NOT `auto-run` i.e. the job was deployed with **`run_job=False`**; Check before you run the notebooks or workflow_ (see screenshots under `CHECKS`)
+# MAGIC    1.2. **For clusters with **`*_w_init` suffixes**:    Check cluster's Advance Options to make sure the the `openslide-tools.sh` workspace file path is added to the `Init scripts`** -- _This is best checked when you DO NOT `auto-run` i.e. the job was deployed with **`run_job=False`**; Check before you run the notebooks or workflow_ (see screenshots under `CHECKS`)
+# MAGIC
+# MAGIC    1.3. **To use a specific `Catalog` and/or `Project_Schema`**, users can either   
+# MAGIC    
+# MAGIC      1.3.1. Update the widgets on the top after a first `Run all` of this notebook; see section **`Modify UC_CONFIG config. through widgets`**, OR    
+# MAGIC         
+# MAGIC      1.3.2.  Update the variable `UC_CONFIG` directly in section **`Modify UC_CONFIG config. through widgets`**
 # MAGIC
 # MAGIC 2. **Run the accelerator notebooks:**    
 # MAGIC Feel free to explore the multi-step job page and **run the Workflow**, or **run the notebooks interactively** by attaching the associated cluster to see how this solution accelerator executes. 
 # MAGIC
-# MAGIC     2a. **Run the Workflow**: Navigate to the Workflow link and hit the `Run Now` 💥. 
+# MAGIC      2.1. **Run the Workflow**: Navigate to the Workflow link and hit the `Run Now` 💥. 
 # MAGIC   
-# MAGIC     2b. **Run the notebooks interactively**: Attach the notebook with the cluster(s) created and execute as described in the **`job_json['tasks']`** below.
+# MAGIC      2.2. **Run the notebooks interactively**: Attach the notebook with the cluster(s) created and execute as described in the **`job_json['tasks']`** below.
 # MAGIC
 # MAGIC 3. **Clean up resources:**    
-# MAGIC When you are done exploring the solution accelerator you can run:    
-# MAGIC     ``` nsc.cleanup_digital_pathology_resources(result, confirm=True) ```
+# MAGIC When you are done exploring the solution accelerator you can run:   
+# MAGIC         ``` 
+# MAGIC         sc.cleanup_digital_pathology_resources(result, confirm=True) 
+# MAGIC         ```
 # MAGIC
 # MAGIC ---    
 # MAGIC **Prerequisites:** 
@@ -125,7 +133,7 @@ dbutils.widgets.text("schema_name", "digital_pathology", "UC Schema Name")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC #### Users can modify config. through widgets
+# MAGIC ### Users can modify `UC_CONFIG` config. through widgets
 # MAGIC **If you wish to use a preferred/designated `catalog` and `schema`:** PLEASE update the values in the above cell / widgets manually before running the following cells. 
 
 # COMMAND ----------
@@ -182,7 +190,7 @@ print(f"Workspace URL: {workspace_url} (e.g., https://<databricks-instance>)")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC #### Job Config.
+# MAGIC ### Job Config.
 
 # COMMAND ----------
 
@@ -473,6 +481,8 @@ result
 # MAGIC
 # MAGIC **When you are ready to exit the Digital Pathology Solution Accelerator, we can clean up the compute resources and job deployment.**
 # MAGIC
+# MAGIC - **Uncomment the following code to run Clean Up**
+# MAGIC
 # MAGIC _Note: The files (Tables, Volumes, Models/Functions) generated in the Unity Catalog's Schema will remain unless you delete them manually as well._    
 # MAGIC _You can Drop these via [SQL `DROP` commands](https://docs.databricks.com/aws/en/sql/language-manual/#ddl-statements)_.   
 
@@ -481,9 +491,9 @@ result
 # DBTITLE 1,cleanup_digital_pathology_resources
 ## If you have the results object directly from the deployment
 
-# Clean up without confirmation prompt
-cleanup_status = nsc.cleanup_digital_pathology_resources(result, confirm=True)
-print(f"\nCleanup status: {cleanup_status}")
+## Clean up with confirmation prompt
+# cleanup_status = nsc.cleanup_digital_pathology_resources(result, confirm=True)
+# print(f"\nCleanup status: {cleanup_status}")
 
 # COMMAND ----------
 

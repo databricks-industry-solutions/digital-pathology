@@ -40,11 +40,6 @@ import json
 import os
 from pprint import pprint
 
-## TEST override above with ./config/runme_config.json
-# catalog_name = 'dbdemos' ## update this to your catalog name
-# catalog_name = 'mmt' ## update this to your catalog name
-# project_name='digital_pathology' ## update this to your project_name -- same as "schema_name"
-
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)  
 
@@ -77,9 +72,6 @@ destination_path = f"{BASE_PATH}/openslide-tools.sh" #'/Volumes/dbdemos/digital_
 
 # Ensure the destination directory exists
 os.makedirs(os.path.dirname(destination_path), exist_ok=True)
-
-# Use subprocess to copy the file -- moved this to ./config/0-config so this should have been completed
-# subprocess.run(["cp", source_path, destination_path], check=True)
 
 # We check that the file was copied successfully by displaying the contents of the destination file
 subprocess.run(["cat", destination_path], check=True)
