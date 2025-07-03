@@ -3,10 +3,10 @@
 # MAGIC ### Your intial configuration for your project is being setup...   
 # MAGIC
 # MAGIC **_NB: you may want to specify a different `catalog_name` and/or `project_name` to avoid overwriting or using the same Unity Catalog as other users testing the same solution accelerator._** 
-# MAGIC - The easiest way this can be done by updating `.config/runme_config.json` directly and/OR updating the widget values corresponding to `catalog_name` and/or `project_name` within the `RUNME.py` notebook.  
+# MAGIC - The easiest way this can be done by updating `.config/default_config.json` directly and/OR updating the widget values corresponding to `catalog_name` and/or `project_name` within the `RUNME.py` notebook after an intial `Run-All`.  
 # MAGIC
 # MAGIC You may only need to run this once and after that project configuration can be shared with other notebooks.   
-# MAGIC This config. setup notebook is executed by `00-create-annotation-UC` and other downstream tasks in the workflow.
+# MAGIC This config. setup notebook is executed by `00-create-annotation-UC`.
 
 # COMMAND ----------
 
