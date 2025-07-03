@@ -21,7 +21,8 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **NOTE:** Before proceeding, it is worth reviewing the `./config/0-config` and `./config/runme_config.json` files to check that the catalog, schema (project_name), and volume paths are set up as desired with a corresponding cluster. This is epecially important if you are running the notebook separately. `./config/runme_config.json` gets overwritten in `RUNME.py` when catalog and/or schema (project_name) are specified via widget updates cf. defaults.
+# MAGIC **IMPORTANT NOTE:**    
+# MAGIC **Before proceeding, it is worth reviewing the `./config/0-config` and `./config/runme_config.json` files to check that the catalog, schema (project_name), and volume paths are set up as desired with a corresponding cluster. This is epecially important if you are running the notebook separately. `./config/runme_config.json` gets overwritten in `RUNME.py` when catalog and/or schema (project_name) are specified via widget updates cf. defaults.**
 
 # COMMAND ----------
 
