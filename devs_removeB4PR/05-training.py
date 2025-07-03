@@ -29,12 +29,6 @@ else:
 
 # COMMAND ----------
 
-# DBTITLE 1,cluster init file: openslide-tools.sh would install this
-## uncomment below to run this nb separately from RUNME nb if openslide-tools hasn't been installed
-# !apt-get install -y openslide-tools
-
-# COMMAND ----------
-
 # DBTITLE 1,[RUNME clusters config specifies cluster lib]
 ## uncomment below to run this nb separately from RUNME nb if openslide-python hasn't been installed
 # %pip install openslide-python
@@ -42,9 +36,20 @@ else:
 
 # COMMAND ----------
 
+# DBTITLE 1,cluster init file: openslide-tools.sh would install this
+## uncomment below to run this nb separately from RUNME nb if openslide-tools hasn't been installed
+# !apt-get install -y openslide-tools
+
+# COMMAND ----------
+
+# DBTITLE 1,run Config without overwriting patches
+# MAGIC %run ./config/0-config $project_name=digital_pathology $overwrite_old_patches=no $max_n_patches=2000
+
+# COMMAND ----------
+
 # DBTITLE 1,Install pytorch_lightning
 # MAGIC %pip install pytorch_lightning==1.6.5
-# MAGIC dbutils.library.restartPython() #clears all existing variables
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -78,15 +83,8 @@ import json
 import os
 from pprint import pprint
 
-# Read User Specified RUNME_Config -- this will contain default values if .json not updated
-with open("./config/runme_config.json", "r") as f:
-  config = json.load(f)
-  
-catalog_name = config["catalog_name"]
-project_name = config["schema_name"] #same as "schema_name"
-
-print(f"catalog_name: {catalog_name}")
-print(f"project_name: {project_name}")
+catalog_name="dbdemos"
+project_name='digital_pathology' 
 
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)

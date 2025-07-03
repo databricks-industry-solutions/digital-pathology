@@ -41,15 +41,8 @@ import json
 import os
 from pprint import pprint
 
-# Read User Specified RUNME_Config -- this will contain default values if .json not updated
-with open("./config/runme_config.json", "r") as f:
-  config = json.load(f)
-  
-catalog_name = config["catalog_name"]
-project_name = config["schema_name"] #same as "schema_name"
-
-print(f"catalog_name: {catalog_name}")
-print(f"project_name: {project_name}")
+catalog_name='dbdemos'
+project_name='digital_pathology' 
 
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)

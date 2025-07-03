@@ -1,9 +1,15 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC
-# MAGIC This is added to Workspace path to circumvent encountered issues (_when tested Jan2025_). 
+# MAGIC <!-- This is added to Workspace path to circumvent encountered issues (_when tested Jan2025_).  -->
 # MAGIC
 # MAGIC <!-- #### (original) -- this previous approach now has a recent code-change / PR induced Error
+# MAGIC
+# MAGIC
+# MAGIC **Jan2025_Update NB:** Recent updates to repository dependency `https://github.com/databricks-industry-solutions/notebook-solution-companion@safe-print-html` broke the existing code process. Hidden/Commented code reflects prior version.    
+# MAGIC    
+# MAGIC **Workaround Solution Provided:** ` solacc/companion/_init_.py` from a previous [`Pull Request`](https://github.com/databricks-industry-solutions/notebook-solution-companion/blob/f7e381d77675b29c2d3f9d377a528ceaf2255f23/solacc/companion/__init__.py) is copied to  `solacc_companion_init` in the workspace and `%run` to access `NotebookSolutionCompanion()` 
+# MAGIC
 # MAGIC
 # MAGIC ## Install util packages (separate cell)
 # MAGIC # %pip install git+https://github.com/databricks-academy/dbacademy@v1.0.13 git+https://github.com/databricks-industry-solutions/notebook-solution-companion@safe-print-html pyspark>=3.1.2 --quiet --disable-pip-version-check
@@ -16,7 +22,7 @@
 # MAGIC
 # MAGIC <!-- `TypeError: JobsAPI.create() got an unexpected keyword argument 'request'` . -->
 # MAGIC     
-# MAGIC The `__init__.py` code used here is taken from a prior PR that works e.g. [solacc/companion/\__init\__.py](https://github.com/databricks-industry-solutions/notebook-solution-companion/blob/f7e381d77675b29c2d3f9d377a528ceaf2255f23/solacc/companion/__init__.py) <!-- link wrt the PR update -->
+# MAGIC - The `__init__.py` code used here is taken from a prior PR e.g. [solacc/companion/\__init\__.py](https://github.com/databricks-industry-solutions/notebook-solution-companion/blob/f7e381d77675b29c2d3f9d377a528ceaf2255f23/solacc/companion/__init__.py) <!-- link wrt the PR update --> that works without throwing the observed `request` error related to a recent PR
 
 # COMMAND ----------
 

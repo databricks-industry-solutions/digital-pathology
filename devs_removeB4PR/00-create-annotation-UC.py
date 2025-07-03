@@ -21,7 +21,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **NOTE:** Before proceeding, it is worth reviewing the `./config/0-config` and `./config/runme_config.json` files to check that the catalog, schema (project_name), and volume paths are set up as desired with a corresponding cluster. This is epecially important if you are running the notebook separately. `./config/runme_config.json` gets overwritten in `RUNME.py` when catalog and/or schema (project_name) are specified via widget updates cf. defaults.
+# MAGIC Before proceeding, it is worth reviewing the `./config/0-config` file to check that the catalog, schema (project_name), and volume paths are set up as desired with a corresponding cluster. 
 
 # COMMAND ----------
 
@@ -40,10 +40,8 @@ import json
 import os
 from pprint import pprint
 
-## TEST override above with ./config/runme_config.json
-# catalog_name = 'dbdemos' ## update this to your catalog name
-# catalog_name = 'mmt' ## update this to your catalog name
-# project_name='digital_pathology' ## update this to your project_name -- same as "schema_name"
+catalog_name = 'dbdemos' ## update this to your catalog name
+project_name='digital_pathology' ## update this to your project_name -- same as "schema_name"
 
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)  
