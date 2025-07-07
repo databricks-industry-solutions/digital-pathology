@@ -1,10 +1,12 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC This notebook is to setup your intial configuration for your project.   
-# MAGIC **_NB: you may want to specify a different `catalog_name` to avoid overwriting or using the same Unity Catalog as other users testing the same solution accelerator._**   
-# MAGIC You may only need to run this once and after that project configuration can be shared with other notebooks.   
-# MAGIC This notebook is executed by `01-create-annotation-UC`.
+# MAGIC ### Your intial configuration for your project is being setup...   
 # MAGIC
+# MAGIC **_NB: you may want to specify a different `catalog_name` and/or `project_name` to avoid overwriting or using the same Unity Catalog as other users testing the same solution accelerator._** 
+# MAGIC - The easiest way this can be done by updating `.config/default_config.json` directly and/OR updating the widget values corresponding to `catalog_name` and/or `project_name` within the `RUNME.py` notebook after an intial `Run-All`.  
+# MAGIC
+# MAGIC You may only need to run this once and after that project configuration can be shared with other notebooks.   
+# MAGIC This config. setup notebook is executed by `00-create-annotation-UC`.
 
 # COMMAND ----------
 
@@ -22,7 +24,7 @@
 # MAGIC    - 1 Driver | 64 GB Memory, 16 Cores | Runtime
 # MAGIC
 # MAGIC
-# MAGIC ###### NB: Remember to include init scripts path (e.g. from Workspace) in Cluster Advance Options :  
+# MAGIC ###### NB: Remember to CHECK that `init scripts` path (e.g. from Workspace) are included in Cluster Advance Options :  
 # MAGIC     - /Workspace/Users/<user-email>/<repoORdirectory-location>/digital-pathology/openslide-tools.sh
 
 # COMMAND ----------
@@ -36,13 +38,21 @@
 
 # DBTITLE 1,Clear widgets if updates/reset required
 ## if required uncomment to reset widgets
-# dbutils.widgets.removeAll()
+# dbutils.widgets.removeAll() 
 
 # COMMAND ----------
 
-# DBTITLE 1,Set nb parameters with widgets
-dbutils.widgets.text('catalog_name','dbdemos') ## update to use specific catalog if needed
-dbutils.widgets.text('project_name','digital_pathology') ## using underscore for UC is preferred | updated project_data_paths as well to match
+# DBTITLE 1,Default UC_CONFIG | UC catalog and schema
+# Extract default_config wrt the digital-pathology folder level
+from config.default_config import UC_CONFIG
+
+UC_CONFIG
+
+# COMMAND ----------
+
+# DBTITLE 1,Set Default  UC / nb parameters with widgets
+dbutils.widgets.text('catalog_name', UC_CONFIG['catalog_name']) ## update to use specific catalog if needed
+dbutils.widgets.text('project_name', UC_CONFIG['schema_name']) ## using underscore for UC is preferred | updated project_data_paths as well to match
 dbutils.widgets.dropdown('overwrite_old_patches','no',['yes','no'])
 dbutils.widgets.text('max_n_patches','500')
 
@@ -57,10 +67,31 @@ max_n_patches=int(dbutils.widgets.get('max_n_patches'))
 # COMMAND ----------
 
 # DBTITLE 1,Check widget params
-# print(f"Catalog Name: {catalog_name}")
-# print(f"Project Name: {project_name}")
-# print(f"Overwrite Old Patches: {overwrite}")
-# print(f"Max Number of Patches: {max_n_patches}")
+print("Default params ---")
+print(f"Catalog Name: {catalog_name}")
+print(f"Project Name: {project_name}")
+print(f"Overwrite Old Patches: {overwrite}")
+print(f"Max Number of Patches: {max_n_patches}")
+
+# COMMAND ----------
+
+# DBTITLE 1,Override/Update Defaults with runme_config.json UC Specs
+# Read User Specified RUNME_Config
+import json
+with open("./config/runme_config.json", "r") as f:
+  config = json.load(f)
+  
+catalog_name = config["catalog_name"]
+project_name = config["schema_name"]
+
+# COMMAND ----------
+
+# DBTITLE 1,Check extracted Updated params
+print("Updated params ---")
+print(f"Catalog Name: {catalog_name}")
+print(f"Project Name: {project_name}")
+print(f"Overwrite Old Patches: {overwrite}")
+print(f"Max Number of Patches: {max_n_patches}")
 
 # COMMAND ----------
 
@@ -212,7 +243,7 @@ destination_path = f"{project_utils.settings['base_path']}/openslide-tools.sh" #
 os.makedirs(os.path.dirname(destination_path), exist_ok=True)
 
 # Use subprocess to copy the file
-subprocess.run(["cp", source_path, destination_path], check=True)
+subprocess.run(["cp", source_path, destination_path], check=True) # run at digital_pathology folder level
 # subprocess.run(["cat", destination_path], check=True)
 
 # COMMAND ----------

@@ -15,16 +15,16 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,cluster init file: openslide-tools.sh
+## uncomment below to run this nb separately from RUNME nb if openslide-tools hasn't been installed
+# !apt-get install -y openslide-tools
+
+# COMMAND ----------
+
 # DBTITLE 1,[RUNME clusters config specifies cluster lib]
 ## uncomment below to run this nb separately from RUNME nb if openslide-python hasn't been installed
 # %pip install openslide-python
 # dbutils.library.restartPython()
-
-# COMMAND ----------
-
-# DBTITLE 1,cluster init file: openslide-tools.sh
-## uncomment below to run this nb separately from RUNME nb if openslide-tools hasn't been installed
-# !apt-get install -y openslide-tools
 
 # COMMAND ----------
 
@@ -33,8 +33,15 @@ import json
 import os
 from pprint import pprint
 
-catalog_name = 'dbdemos'
-project_name='digital_pathology' 
+# Read User Specified RUNME_Config -- this will contain default values if .json not updated
+with open("./config/runme_config.json", "r") as f:
+  config = json.load(f)
+  
+catalog_name = config["catalog_name"]
+project_name = config["schema_name"] #same as "schema_name"
+
+print(f"catalog_name: {catalog_name}")
+print(f"project_name: {project_name}")
 
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)

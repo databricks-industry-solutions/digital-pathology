@@ -6,12 +6,17 @@
 
 # MAGIC %md
 # MAGIC # Distributed feature extraction
-# MAGIC In this notebook we use spark's `pandas_udfs` to efficiently distribute feature extraction process. The extracted features are then can be used to visually inspect the structure of extracted patches.
+# MAGIC In this notebook we use spark's `pandas_udfs` to efficiently distribute feature extraction process. The extracted features are then can be used to visually inspect the structure of extracted patches.   
+# MAGIC <br>
 # MAGIC
+# MAGIC <img src="https://viso.ai/wp-content/uploads/2024/04/inceptionv3-1.png"> 
+# MAGIC <!-- https://viso.ai/deep-learning/googlenet-explained-the-inception-model-that-won-imagenet/ -->
 # MAGIC
-# MAGIC <img src="https://cloud.google.com/tpu/docs/images/inceptionv3onc--oview.png">
+# MAGIC <!-- <img src="https://cloud.google.com/tpu/docs/images/inceptionv3onc--oview.png">   -->
+# MAGIC <!-- papers with code site is down! -->
 # MAGIC
 # MAGIC We use embeddings based on a pre-trained deep neural network (in this example, [InceptionV3](https://arxiv.org/abs/1512.00567)) to extract features from each patch.
+# MAGIC
 # MAGIC Associated methods for feature extraction are defined within `./definitions` notebook in this package.
 
 # COMMAND ----------
@@ -21,16 +26,16 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,cluster init file: openslide-tools.sh
+## uncomment below to run this nb separately from RUNME nb if openslide-tools hasn't been installed
+# !apt-get install -y openslide-tools
+
+# COMMAND ----------
+
 # DBTITLE 1,[RUNME clusters config specifies cluster lib]
 ## uncomment below to run this nb separately from RUNME nb if openslide-python hasn't been installed
 # %pip install openslide-python
 # dbutils.library.restartPython()
-
-# COMMAND ----------
-
-# DBTITLE 1,cluster init file: openslide-tools.sh
-## uncomment below to run this nb separately from RUNME nb if openslide-tools hasn't been installed
-# !apt-get install -y openslide-tools
 
 # COMMAND ----------
 
@@ -44,8 +49,15 @@ import json
 import os
 from pprint import pprint
 
-catalog_name = 'dbdemos'
-project_name='digital_pathology' 
+# Read User Specified RUNME_Config -- this will contain default values if .json not updated
+with open("./config/runme_config.json", "r") as f:
+  config = json.load(f)
+  
+catalog_name = config["catalog_name"]
+project_name = config["schema_name"] #same as "schema_name"
+
+print(f"catalog_name: {catalog_name}")
+print(f"project_name: {project_name}")
 
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)

@@ -21,7 +21,8 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Before proceeding, it is worth reviewing the `./config/0-config` file to check that the catalog, schema (project_name), and volume paths are set up as desired with a corresponding cluster. 
+# MAGIC **IMPORTANT NOTE:**    
+# MAGIC **Before proceeding, it is worth reviewing the `./config/0-config` and `./config/runme_config.json` files to check that the catalog, schema (project_name), and volume paths are set up as desired with a corresponding cluster. This is epecially important if you are running the notebook separately. `./config/runme_config.json` gets overwritten in `RUNME.py` when catalog and/or schema (project_name) are specified via widget updates cf. defaults.**
 
 # COMMAND ----------
 
@@ -39,9 +40,6 @@ catalog_name, project_name
 import json
 import os
 from pprint import pprint
-
-catalog_name = 'dbdemos'
-project_name='digital_pathology' 
 
 user=dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 user_uid = abs(hash(user)) % (10 ** 5)  
@@ -75,9 +73,6 @@ destination_path = f"{BASE_PATH}/openslide-tools.sh" #'/Volumes/dbdemos/digital_
 
 # Ensure the destination directory exists
 os.makedirs(os.path.dirname(destination_path), exist_ok=True)
-
-# Use subprocess to copy the file -- moved this to ./config/0-config so this should have been completed
-# subprocess.run(["cp", source_path, destination_path], check=True)
 
 # We check that the file was copied successfully by displaying the contents of the destination file
 subprocess.run(["cat", destination_path], check=True)
